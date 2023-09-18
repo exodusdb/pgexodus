@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(extension)
+project(extension C)
 
 message("")
 message("--EXODUS PGEXODUS CMAKE INIT --")

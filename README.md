@@ -1,5 +1,44 @@
 # pgexodus PostgreSQL Extension
 
+## Provides
+
+EXODUS database sort select statement
+
+relies the following functions:
+
+* exodus.extract_text
+* exodus.extract_number
+* exodus.extract_date
+* exodus.extract_time
+* exodus.extract_datetime
+* exodus.count
+
+In order to do things like sort and select (filter) on various types of information.
+
+```
+select invoices with amount > 1000.00 by date by time
+```
+
+## Quick Install
+
+```
+apt update
+apt install cmake git postgresql postgresql-server-dev-1*
+rm build -rf
+mkdir build
+cd build
+cmake ..
+make
+make install
+make test
+```
+
+## Using
+
+```
+create extension pgexodus;
+```
+
 ## Dependencies
 
 To build the extensions you need to have:
@@ -33,3 +72,4 @@ PostgreSQL.
 ```
 cmake .. -DPGPATH=/usr/local/pgsql/15
 ```
+
