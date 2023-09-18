@@ -12,7 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(PostgreSQL REQUIRED)
 
-set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${PostgreSQL_INCLUDE_DIRS}
                     ${PostgreSQL_SERVER_INCLUDE_DIRS})
