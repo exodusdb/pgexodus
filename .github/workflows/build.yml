@@ -1,4 +1,4 @@
-name: Debug Build on Ubuntu 18.04 
+name: Debug Build on Ubuntu
 
 on:
   pull_request:
@@ -11,6 +11,7 @@ jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     strategy:
+      #${{ matrix.version }}
       matrix:
         version: [15]
     steps:
@@ -21,7 +22,7 @@ jobs:
         #wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
         sudo apt-get update
     - name: Install PostgreSQL
-      run: sudo apt-get -y install cmake postgresql postgresql-server-dev-all postgresql-server-dev-${{ matrix.version }}
+      run: sudo apt-get -y install cmake postgresql postgresql-server-dev-1* postgresql-server-dev-2*
     - name: Check that tools were successfully installed
       run: |
         pg_config
