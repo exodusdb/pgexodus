@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(pgexodus2 C)
+project(pgexodus C)
 
 # Set the minimum required PostgreSQL version
 set(PGSQL_MIN_VERSION "10.0.0")
@@ -39,7 +39,7 @@ execute_process(
 set(SOURCES pgexodus.c extract.c)
 
 # Set the shared library name and version
-set(EXTENSION_NAME pgexodus2)
+set(EXTENSION_NAME pgexodus)
 set(EXTENSION_VERSION 1.0)
 
 # Create the shared library for the extension
