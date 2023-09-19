@@ -2,11 +2,10 @@
 set -euxo pipefail
 
 	apt update
-	apt install cmake git postgresql postgresql-server-dev-1*
+	apt install cmake git postgresql
+	apt install postgresql-server-dev-all
 	rm build -rf
 	mkdir build
-	cd build
-	cmake ..
-	make
-	make install
-	make test
+	cmake . -B build
+	cmake --build build
+	cmake --install build

@@ -1,25 +1,80 @@
-cmake_minimum_required(VERSION 3.1)
-project(extension C)
+cmake_minimum_required(VERSION 3.0)
+project(pgexodus2 C)
 
-message("")
-message("--EXODUS PGEXODUS CMAKE INIT --")
+# Set the minimum required PostgreSQL version
+set(PGSQL_MIN_VERSION "10.0.0")
 
-#message("CMAKE_CURRENT_LIST_DIR=${CMAKE_CURRENT_LIST_DIR}")
-#message("CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
-#message("CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
+# Find PostgreSQL
+#https://cmake.org/cmake/help/latest/module/FindPostgreSQL.html
+find_package(PostgreSQL ${PGSQL_MIN_VERSION} REQUIRED)
+message("INCLUDEDIR-SERVER           = " ${INCLUDEDIR-SERVER})
+message("PostgreSQL_LIBRARIES        = " ${PostgreSQL_LIBRARIES})
+message("PostgreSQL_INCLUDE_DIRS     = " ${PostgreSQL_INCLUDE_DIRS})
+message("PostgreSQL_LIBRARY_DIRS     = " ${PostgreSQL_LIBRARY_DIRS})
+message("PostgreSQL_VERSION_STRING   = " ${PostgreSQL_VERSION_STRING})
+message("PostgreSQL_TYPE_INCLUDE_DIR = " ${PostgreSQL_TYPE_INCLUDE_DIR})
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+# Find PostgreSQL include dir
+execute_process(
+	COMMAND pg_config --includedir-server
+	OUTPUT_VARIABLE _pg_server_inc_dirs
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-find_package(PostgreSQL REQUIRED)
+# Find PostgreSQL package lib dir
+execute_process(
+	COMMAND pg_config --pkglibdir
+	OUTPUT_VARIABLE _pg_pkglibdir
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-#set(CMAKE_CXX_STANDARD 14)
+# Find PostgreSQL share dir
+execute_process(
+	COMMAND pg_config --sharedir
+	OUTPUT_VARIABLE _pg_sharedir
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-include_directories(${PostgreSQL_INCLUDE_DIRS}
-                    ${PostgreSQL_SERVER_INCLUDE_DIRS})
+# Set the extension source files
+set(SOURCES pgexodus.c extract.c)
 
-enable_testing()
-add_subdirectory(src)
+# Set the shared library name and version
+set(EXTENSION_NAME pgexodus2)
+set(EXTENSION_VERSION 1.0)
 
-#add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+# Create the shared library for the extension
+add_library(${EXTENSION_NAME} MODULE ${SOURCES})
 
-message("--EXODUS PGEXODUS CMAKE EXIT --")
+# Include PostgreSQL headers
+target_include_directories(${EXTENSION_NAME} PRIVATE ${PostgreSQL_INCLUDE_DIRS} ${_pg_server_inc_dirs})
+
+# Link against PostgreSQL libraries
+target_link_libraries(${EXTENSION_NAME} PRIVATE ${PostgreSQL_LIBRARIES})
+
+# Set the required compilation flags
+target_compile_options(${EXTENSION_NAME} PRIVATE -Wall -Werror -Wextra -O3)
+
+# Set the target properties
+set_target_properties(${EXTENSION_NAME} PROPERTIES
+    PREFIX ""
+    SUFFIX ".so"
+)
+
+# Create the control file
+configure_file(pgexodus.control.in ${EXTENSION_NAME}.control @ONLY)
+
+# Create the install script
+configure_file(install.sql.in ${EXTENSION_NAME}--${EXTENSION_VERSION}.sql @ONLY)
+
+# Install the extension lib
+install(TARGETS ${EXTENSION_NAME}
+    #LIBRARY DESTINATION "${PGSQL_PKGLIBDIR}"
+    LIBRARY DESTINATION "${_pg_pkglibdir}"
+)
+
+# Install the control files
+install(FILES
+    "${CMAKE_BINARY_DIR}/${EXTENSION_NAME}.control"
+    "${CMAKE_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
+    DESTINATION "${_pg_sharedir}/extension"
+)

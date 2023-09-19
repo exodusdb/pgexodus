@@ -1,0 +1,4 @@
+comment = '@EXTENSION_NAME@'
+default_version = '@EXTENSION_VERSION@'
+module_pathname = @EXTENSION_NAME@
+relocatable = true

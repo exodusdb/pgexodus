@@ -1,0 +1,130 @@
+-- =================================
+-- Create the @EXTENSION_NAME@ @EXTENSION_VERSION@ functions
+-- =================================
+
+\echo Use "CREATE EXTENSION @EXTENSION_NAME@" to load this file. \quit
+
+-- Create schema
+----------------
+
+	CREATE SCHEMA IF NOT EXISTS exodus;
+
+-- A function to create a role
+------------------------------
+
+	CREATE OR REPLACE FUNCTION exodus.create_role_if_not_exists(role_name TEXT) RETURNS VOID AS $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = role_name) THEN
+			EXECUTE 'CREATE ROLE ' || role_name;
+		END IF;
+	END;
+	$$ LANGUAGE plpgsql;
+
+-- Create role
+--------------
+
+	SELECT exodus.create_role_if_not_exists('exodus');
+	DROP FUNCTION exodus.create_role_if_not_exists(role_name TEXT);
+
+	ALTER SCHEMA exodus OWNER TO exodus;
+
+-- Drop any existing functions
+------------------------------
+
+	DROP FUNCTION IF EXISTS exodus.extract_text(text, int4, int4, int4);
+	DROP FUNCTION IF EXISTS exodus.extract_date(text, int4, int4, int4);
+	DROP FUNCTION IF EXISTS exodus.extract_time(text, int4, int4, int4);
+	DROP FUNCTION IF EXISTS exodus.extract_datetime(text, int4, int4, int4);
+	DROP FUNCTION IF EXISTS exodus.extract_number(text, int4, int4, int4);
+	DROP FUNCTION IF EXISTS exodus.count(text, text);
+
+-- Create the functions
+-----------------------
+
+	CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn int4, vn int4, sn int4)     RETURNS text      AS '@EXTENSION_NAME@', 'exodus_extract_text'     LANGUAGE C IMMUTABLE;
+	-- returns zero for zero length strings or NULLS
+	CREATE OR REPLACE FUNCTION exodus.extract_number(data text, fn int4, vn int4, sn int4)   RETURNS float8    AS '@EXTENSION_NAME@', 'exodus_extract_number'   LANGUAGE C IMMUTABLE;
+	CREATE OR REPLACE FUNCTION exodus.count(data text, countchar text)                       RETURNS integer   AS '@EXTENSION_NAME@', 'exodus_count'            LANGUAGE C IMMUTABLE;
+	-- Remaining functions are STRICT therefore never get called with NULLS -- also return NULL if passed zero length strings
+	CREATE OR REPLACE FUNCTION exodus.extract_date(data text, fn int4, vn int4, sn int4)     RETURNS date      AS '@EXTENSION_NAME@', 'exodus_extract_date'     LANGUAGE C IMMUTABLE STRICT;
+	CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn int4, vn int4, sn int4)     RETURNS interval  AS '@EXTENSION_NAME@', 'exodus_extract_time'     LANGUAGE C IMMUTABLE STRICT;
+	CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn int4, vn int4, sn int4) RETURNS timestamp AS '@EXTENSION_NAME@', 'exodus_extract_datetime' LANGUAGE C IMMUTABLE STRICT;
+
+-- Change ownership
+-------------------
+
+	-- GRANT EXECUTE ON FUNCTION exodus.extract_text(text, integer, integer, integer)     TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.extract_date(text, integer, integer, integer)     TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.extract_time(text, integer, integer, integer)     TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.extract_datetime(text, integer, integer, integer) TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.extract_number(text, integer, integer, integer)   TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.count(text, text)                                 TO PUBLIC;
+	ALTER FUNCTION exodus.extract_text(text, integer, integer, integer)     OWNER TO exodus;
+	ALTER FUNCTION exodus.extract_date(text, integer, integer, integer)     OWNER TO exodus;
+	ALTER FUNCTION exodus.extract_time(text, integer, integer, integer)     OWNER TO exodus;
+	ALTER FUNCTION exodus.extract_datetime(text, integer, integer, integer) OWNER TO exodus;
+	ALTER FUNCTION exodus.extract_number(text, integer, integer, integer)   OWNER TO exodus;
+	ALTER FUNCTION exodus.count(text, text)                                 OWNER TO exodus;
+
+-- A function to assist in tests
+--------------------------------
+
+	CREATE OR REPLACE FUNCTION exodus.assert(result bool, expression text)
+	RETURNS VOID AS $$
+	BEGIN
+	    assert result, 'Self test failed. "' || expression || '" is false but should be true.';
+	END;
+	$$ LANGUAGE plpgsql;
+
+-- Self test the various functions
+----------------------------------
+
+-- text
+
+	select exodus.assert((exodus.extract_text('aaa',1,1,1) = 'aaa'), 'exodus.extract_text(''aaa'',1,1,1) = ''aaa''');
+	select exodus.assert((exodus.extract_text(E'a1\x1Eb1\x1Db2a\x1Cb2b\x1Ecc',2,2,2) = 'b2b'),'exodus.extract_text(E''a1\x1Eb1\x1Db2a\x1Cb2b\x1Ecc'',2,2,2) = ''b2b''');
+
+-- date
+
+	select exodus.assert((exodus.extract_date('20000',1,1,1) = '2022-10-03'), 'exodus.extract_date(''20000'',1,1,1) = ''2022-10-03''');
+	select exodus.assert((exodus.extract_date('',1,1,1)      is null),        'exodus.extract_date('''',1,1,1) is null');
+	select exodus.assert((exodus.extract_date('0',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''0'',1,1,1) = ''1967-12-31''');
+
+-- time
+
+	select exodus.assert((exodus.extract_time('0',1,1,1)      = '00:00:00'), 'exodus.extract_time(''0'',1,1,1) = ''00:00:00''');
+	select exodus.assert((exodus.extract_time('10000',1,1,1)  = '02:46:40'), 'exodus.extract_time(''10000'',1,1,1) = ''02:46:40''');
+	select exodus.assert((exodus.extract_time('86399',1,1,1)  = '23:59:59'), 'exodus.extract_time(''86399'',1,1,1) = ''23:59:59''');
+	select exodus.assert((exodus.extract_time('86400',1,1,1)  = '24:00:00'), 'exodus.extract_time(''86400'',1,1,1) = ''24:00"00''');
+	select exodus.assert((exodus.extract_time('100000',1,1,1) = '27:46:40'), 'exodus.extract_time(''100000'',1,1,1) = ''27:46:40''');
+
+-- datetime
+
+	select exodus.assert((exodus.extract_datetime('20000',1,1,1)        = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000'',1,1,1) = ''2022-10-03 00:00:00''');
+	select exodus.assert((exodus.extract_datetime('20000.50000',1,1,1)  = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000.50000'',1,1,1) = ''2022-10-03 00:00:00''');
+
+-- number
+
+	select exodus.assert((exodus.extract_number('',1,1,1)           = 0),          'exodus.extract_number('''',1,1,1) = 0');
+	select exodus.assert((exodus.extract_number('100',1,1,1)        = 100),        'exodus.extract_number(''100'',1,1,1) = 100');
+	select exodus.assert((exodus.extract_number('12345.6789',1,1,1) = 12345.6789), 'exodus.extract_number(''12345.6789'',1,1,1) = 12345.6789');
+
+	select exodus.assert((exodus.extract_number('',1,1,1)            = 0),           'exodus.extract_number('''',1,1,1) = 0');
+	select exodus.assert((exodus.extract_number('-100',1,1,1)        = -100),        'exodus.extract_number(''-100'',1,1,1) = -100');
+	select exodus.assert((exodus.extract_number('-12345.6789',1,1,1) = -12345.6789), 'exodus.extract_number(''-12345.6789'',1,1,1) = -12345.6789');
+
+-- bad dates, times and numbers
+
+	select exodus.assert((exodus.extract_date('x',1,1,1)   = '1967-12-31'), 'exodus.extract_date(''0'',1,1,1) = ''1967-12-31''');
+	select exodus.assert((exodus.extract_time('x',1,1,1)   = '00:00:00'),   'exodus.extract_time(''x'',1,1,1) = ''00:00:00''');
+	select exodus.assert((exodus.extract_number('x',1,1,1) = 0),            'exodus.extract_number('''',1,1,1) = 0');
+
+-- count
+
+	select exodus.assert((exodus.count('aaa','a') = 3), 'exodus.count(''aaa'',''a'') = 3');
+	select exodus.assert((exodus.count('''','a') = 0), 'exodus.count('''',''a'') = 0');
+
+-- Clean up
+-----------
+
+	DROP FUNCTION exodus.assert(result bool, expression text);
