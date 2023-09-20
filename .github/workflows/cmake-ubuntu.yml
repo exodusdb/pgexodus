@@ -32,9 +32,13 @@ jobs:
         sudo apt-get install -y postgresql
         sudo systemctl start postgresql
 
+    - name: Show postgresql config
+      run: pg_config
+      
     - name: Install the specific postgres dev package
       run: |
         #$(apt info postgresql|&grep Depends|cut -d- -f2)
+        sudo -u postgres psql -Atq -c 'select version();'
         SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2|cut -d. -f1)
         sudo apt-get install -y postgresql-server-dev-$SERVER_VER
 
