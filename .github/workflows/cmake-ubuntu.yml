@@ -41,7 +41,7 @@ jobs:
         #sudo -u postgres psql -Atq -c 'select version();'
         #SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2|cut -d. -f1)
         #sudo apt-get install -y postgresql-server-dev-$SERVER_VER
-        #sudo apt-get install -y postgresql-common
+        sudo apt-get install -y postgresql-common
         
     - name: Query PostgreSQL version and config
       run: |
