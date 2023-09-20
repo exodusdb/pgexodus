@@ -1,3 +1,4 @@
+#https://www.postgresql.org/docs/current/extend-extensions.html
 comment = '@EXTENSION_NAME@'
 default_version = '@EXTENSION_VERSION@'
 module_pathname = @EXTENSION_NAME@

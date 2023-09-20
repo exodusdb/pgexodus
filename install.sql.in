@@ -2,6 +2,8 @@
 -- Create the @EXTENSION_NAME@ @EXTENSION_VERSION@ functions
 -- =================================
 
+-- https://www.postgresql.org/docs/current/extend-extensions.html
+
 \echo Use "CREATE EXTENSION @EXTENSION_NAME@" to load this file. \quit
 
 -- Create schema
@@ -72,7 +74,8 @@
 	CREATE OR REPLACE FUNCTION exodus.assert(result bool, expression text)
 	RETURNS VOID AS $$
 	BEGIN
-	    assert result, 'Self test failed. "' || expression || '" is false but should be true.';
+		ASSERT result, 'Self test failed. "' || expression || '" should be true.';
+		RAISE INFO 'Test: % ', expression;
 	END;
 	$$ LANGUAGE plpgsql;
 
@@ -86,12 +89,13 @@
 
 -- date
 
-	select exodus.assert((exodus.extract_date('20000',1,1,1) = '2022-10-03'), 'exodus.extract_date(''20000'',1,1,1) = ''2022-10-03''');
-	select exodus.assert((exodus.extract_date('',1,1,1)      is null),        'exodus.extract_date('''',1,1,1) is null');
+	select exodus.assert((exodus.extract_date('',1,1,1)         is null),     'exodus.extract_date('''',1,1,1) is null');
 	select exodus.assert((exodus.extract_date('0',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''0'',1,1,1) = ''1967-12-31''');
+	select exodus.assert((exodus.extract_date('20000',1,1,1) = '2022-10-03'), 'exodus.extract_date(''20000'',1,1,1) = ''2022-10-03''');
 
 -- time
 
+	select exodus.assert((exodus.extract_time('',1,1,1)          is null),   'exodus.extract_time('''',1,1,1) is null');
 	select exodus.assert((exodus.extract_time('0',1,1,1)      = '00:00:00'), 'exodus.extract_time(''0'',1,1,1) = ''00:00:00''');
 	select exodus.assert((exodus.extract_time('10000',1,1,1)  = '02:46:40'), 'exodus.extract_time(''10000'',1,1,1) = ''02:46:40''');
 	select exodus.assert((exodus.extract_time('86399',1,1,1)  = '23:59:59'), 'exodus.extract_time(''86399'',1,1,1) = ''23:59:59''');
@@ -100,29 +104,42 @@
 
 -- datetime
 
-	select exodus.assert((exodus.extract_datetime('20000',1,1,1)        = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000'',1,1,1) = ''2022-10-03 00:00:00''');
-	select exodus.assert((exodus.extract_datetime('20000.50000',1,1,1)  = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000.50000'',1,1,1) = ''2022-10-03 00:00:00''');
+	select exodus.assert((exodus.extract_datetime('',1,1,1)               is null), 'exodus.extract_datetime('''',1,1,1) is null');
+	select exodus.assert((exodus.extract_datetime('0',1,1,1)           = '1967-12-31 00:00:00'), 'exodus.extract_datetime(''0'',1,1,1) = ''1967-12-31 00:00:00''');
+	select exodus.assert((exodus.extract_datetime('20000.50000',1,1,1) = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000.50000'',1,1,1) = ''2022-10-03 00:00:00''');
 
 -- number
 
 	select exodus.assert((exodus.extract_number('',1,1,1)           = 0),          'exodus.extract_number('''',1,1,1) = 0');
+	select exodus.assert((exodus.extract_number('0',1,1,1)          = 0),          'exodus.extract_number(''0'',1,1,1) = 0');
 	select exodus.assert((exodus.extract_number('100',1,1,1)        = 100),        'exodus.extract_number(''100'',1,1,1) = 100');
 	select exodus.assert((exodus.extract_number('12345.6789',1,1,1) = 12345.6789), 'exodus.extract_number(''12345.6789'',1,1,1) = 12345.6789');
 
-	select exodus.assert((exodus.extract_number('',1,1,1)            = 0),           'exodus.extract_number('''',1,1,1) = 0');
+	select exodus.assert((exodus.extract_number('-0',1,1,1)          = 0),           'exodus.extract_number(''-0'',1,1,1) = 0');
 	select exodus.assert((exodus.extract_number('-100',1,1,1)        = -100),        'exodus.extract_number(''-100'',1,1,1) = -100');
 	select exodus.assert((exodus.extract_number('-12345.6789',1,1,1) = -12345.6789), 'exodus.extract_number(''-12345.6789'',1,1,1) = -12345.6789');
 
--- bad dates, times and numbers
-
-	select exodus.assert((exodus.extract_date('x',1,1,1)   = '1967-12-31'), 'exodus.extract_date(''0'',1,1,1) = ''1967-12-31''');
-	select exodus.assert((exodus.extract_time('x',1,1,1)   = '00:00:00'),   'exodus.extract_time(''x'',1,1,1) = ''00:00:00''');
-	select exodus.assert((exodus.extract_number('x',1,1,1) = 0),            'exodus.extract_number('''',1,1,1) = 0');
-
 -- count
 
+	select exodus.assert((exodus.count('''','a')  = 0), 'exodus.count('''',''a'') = 0');
+	select exodus.assert((exodus.count('0','a')   = 0), 'exodus.count(''0'',''a'') = 0');
 	select exodus.assert((exodus.count('aaa','a') = 3), 'exodus.count(''aaa'',''a'') = 3');
-	select exodus.assert((exodus.count('''','a') = 0), 'exodus.count('''',''a'') = 0');
+
+-- bad dates, times and numbers
+
+	select exodus.assert(true, '-- bad dates, times and numbers --');
+	select exodus.assert((exodus.extract_date('x',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''x'',1,1,1) = ''1967-12-31''');
+	select exodus.assert((exodus.extract_time('x',1,1,1)     = '00:00:00'),   'exodus.extract_time(''x'',1,1,1) = ''00:00:00''');
+	select exodus.assert((exodus.extract_datetime('x',1,1,1) = '1967-12-31 00:00:00'), 'exodus.extract_date(''x'',1,1,1) = ''1967-12-31 00:00:00''');
+	select exodus.assert((exodus.extract_number('x',1,1,1)   = 0),            'exodus.extract_number(''x'',1,1,1) = 0');
+
+-- TODO Leading spaces are tolerated but should not be
+
+	select exodus.assert(true, '-- TODO non-numeric dates, times and numbers should raise a non-numeric error --');
+	--select exodus.assert((exodus.extract_date(' 1',1,1,1)   = '1967-12-31'), 'exodus.extract_date('' 1'',1,1,1) = ''1967-12-31''');
+	--select exodus.assert((exodus.extract_time(' 1',1,1,1)   = '00:00:00'),   'exodus.extract_time('' 1'',1,1,1) = ''00:00:00''');
+	--select exodus.assert((exodus.extract_datetime(' 1',1,1,1) = '1967-12-31 00:00:00'), 'exodus.extract_date('' 1'',1,1,1) = ''1967-12-31 00:00:00''');
+	--select exodus.assert((exodus.extract_number(' 1',1,1,1) = 0),            'exodus.extract_number('' 1'',1,1,1) = 0');
 
 -- Clean up
 -----------
