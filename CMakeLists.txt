@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(pgexodus C)
 
+include(CTest)
+enable_testing()
+
 # Set the minimum required PostgreSQL version
 set(PGSQL_MIN_VERSION "10.0.0")
 
@@ -88,3 +91,5 @@ install(FILES
     "${CMAKE_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
     DESTINATION "${_pg_sharedir}/extension"
 )
+
+add_test(NAME pgexodus_test COMMAND sudo -u postgres psql postgres -c "drop extension if exists pgexodus;create extension pgexodus")

@@ -10,6 +10,8 @@ set -euxo pipefail
 	cmake . -B build
 	cmake --build build
 	cmake --install build
+	cd build
+	ctest
 :
 : The extension is now available to the above postgres installation.
 :
