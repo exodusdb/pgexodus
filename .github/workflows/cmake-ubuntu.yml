@@ -30,15 +30,20 @@ jobs:
       run: |
         set -x
         sudo apt-get update
-        sudo apt-get install -y postgresql-${{ matrix.PG_VER }} postgresql-server-dev-${{ matrix.PG_VER }} postgresql-client-${{ matrix.PG_VER }} postgresql-common
+        sudo apt-get install -y \
+          postgresql-${{ matrix.PG_VER }} \
+          postgresql-client-${{ matrix.PG_VER }} \
+          postgresql-server-dev-${{ matrix.PG_VER }}
         sudo systemctl start postgresql
 
-    - name: Show postgresql config
-      run: |
-        set -x
-        pg_config
-        psql --version
-        apt search postgresql|grep ^postgresql
+    - name: Show postgresql config (1)
+      run: pg_config
+
+    - name: Show postgresql config (2)
+      run: psql --version
+
+    - name: Show postgresql config (3)
+      run: apt search postgresql|grep ^postgresql
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
