@@ -30,6 +30,8 @@ jobs:
         [[ $UBUNTU_VER == 22.04 ]] && PG_VER=14
         [[ $UBUNTU_VER == 20.04 ]] && PG_VER=12
         [[ $UBUNTU_VER == 18.04 ]] && PG_VER=10
+
+        sudo apt-get remove -y postgresql postgresql-* || true
         sudo apt-get install -y postgresql-$PG_VER postgresql-server-dev-$PG_VER
         sudo systemctl start postgresql
 
