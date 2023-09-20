@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        UBUNTU_VER: [22.04]
+        UBUNTU_VER: [22.04, 20.04]
 
     runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
@@ -37,11 +37,12 @@ jobs:
       
     - name: Install the specific postgres dev package
       run: |
-        #$(apt info postgresql|&grep Depends|cut -d- -f2)
-        sudo -u postgres psql -Atq -c 'select version();'
-        SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2|cut -d. -f1)
-        sudo apt-get install -y postgresql-server-dev-$SERVER_VER
-
+        ##$(apt info postgresql|&grep Depends|cut -d- -f2)
+        #sudo -u postgres psql -Atq -c 'select version();'
+        #SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2|cut -d. -f1)
+        #sudo apt-get install -y postgresql-server-dev-$SERVER_VER
+        #sudo apt-get install -y postgresql-common
+        
     - name: Query PostgreSQL version and config
       run: |
         psql --version
