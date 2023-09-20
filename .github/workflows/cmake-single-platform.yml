@@ -24,8 +24,6 @@ jobs:
 
     - name: Install Postgresql and its dev package
       run: |
-        ps -ef
-        systemctl start postgresql
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-server-dev-$(apt info postgresql|&grep Depends|cut -d- -f2)
 
@@ -47,6 +45,8 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
+        ps -ef
+        systemctl start postgresql
         export CTEST_OUTPUT_ON_FAILURE=1
         chmod o+x $HOME
         ctest -C ${{env.BUILD_TYPE}}
