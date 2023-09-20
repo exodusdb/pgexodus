@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project(pgexodus C)
 
+# Set the shared library name and version
+set(EXTENSION_NAME pgexodus)
+set(EXTENSION_VERSION 1.0)
+
 include(CTest)
 enable_testing()
 
@@ -51,15 +55,11 @@ set(SOURCES
 	src/count.c
 )
 
-# Set the shared library name and version
-set(EXTENSION_NAME pgexodus)
-set(EXTENSION_VERSION 1.0)
-
 # Create the shared library for the extension
 add_library(${EXTENSION_NAME} MODULE ${SOURCES})
 
 # Include PostgreSQL headers
-target_include_directories(${EXTENSION_NAME} PRIVATE ${PostgreSQL_INCLUDE_DIRS} ${_pg_server_inc_dirs})
+target_include_directories(${EXTENSION_NAME} PRIVATE ${_pg_server_inc_dirs} ${PostgreSQL_INCLUDE_DIRS})
 
 # Link against PostgreSQL libraries
 target_link_libraries(${EXTENSION_NAME} PRIVATE ${PostgreSQL_LIBRARIES})
