@@ -69,9 +69,9 @@ jobs:
     - name: Show postgresql config (3)
       run: |
         #apt search postgresql|grep ^postgresql
-        sudo apt install -y mlocate
-        locate postgres.h
-        locate fmgr.h
+        #sudo apt install -y mlocate
+        #locate postgres.h
+        #locate fmgr.h
         
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
