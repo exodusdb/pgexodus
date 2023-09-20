@@ -46,4 +46,5 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         export CTEST_OUTPUT_ON_FAILURE=1
+        chmod o+x $HOME
         ctest -C ${{env.BUILD_TYPE}}
