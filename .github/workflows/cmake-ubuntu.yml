@@ -15,8 +15,8 @@ jobs:
 
     strategy:
       matrix:
-        UBUNTU_VER: [20.04, 22.04]
-        PG_VER: [12, 14]
+        UBUNTU_VER: [22.04]
+        PG_VER: [14, 15]
 
     runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
