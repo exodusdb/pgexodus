@@ -25,20 +25,6 @@ to sort and select (filter) correctly depending on the data type.
 select invoices with amount > 1000.00 by date by time
 ```
 
-## Quick Install
-
-```
-apt update
-apt install cmake git postgresql postgresql-server-dev-1*
-rm build -rf
-mkdir build
-cd build
-cmake ..
-make
-make install
-make test
-```
-
 ## Using
 
 No manual usage should be required since the extension will be loaded during exodus installation and operation.
@@ -73,7 +59,7 @@ apt install cmake postgresql postgresql-server-dev-all
 
 ```
 apt update
-apt install cmake git postgresql postgresql-server-dev-all
+apt install cmake postgresql postgresql-server-dev-all
 
 rm build -rf
 mkdir build
