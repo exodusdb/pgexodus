@@ -36,7 +36,17 @@ execute_process(
 )
 
 # Set the extension source files
-set(SOURCES pgexodus.c extract.c)
+set(SOURCES
+	src/pgexodus.h
+	src/pgexodus.c
+	src/extract.c
+	src/extract_text.c
+	src/extract_date.c
+	src/extract_time.c
+	src/extract_datetime.c
+	src/extract_number.c
+	src/count.c
+)
 
 # Set the shared library name and version
 set(EXTENSION_NAME pgexodus)
