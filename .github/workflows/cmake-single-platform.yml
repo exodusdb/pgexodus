@@ -24,7 +24,7 @@ jobs:
 
     - name: Install Postgresql and its dev package
       run: |
-        apt-update
+        apt-get update
         apt-get install -y postgresql postgresql-server-dev-all
 
     - name: Configure CMake
