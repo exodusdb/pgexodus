@@ -1,6 +1,4 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: CMake on a single platform
+name: CMake on Ubuntu platform
 
 on:
   push:
@@ -14,10 +12,12 @@ env:
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ubuntu_ver: [22.04, 20.04, 18.04]
+
+    runs-on: ubuntu-${{ matrix.ubuntu_ver }}
 
     steps:
     - uses: actions/checkout@v3
@@ -55,4 +55,5 @@ jobs:
         # Ensure ability to cd into build directory during test which uses sudo -u postgres
         chmod o+x $HOME
 
+        # Run the test which is just tries a "create extension pgexodus"
         ctest -C ${{env.BUILD_TYPE}}
