@@ -1,10 +1,16 @@
-# pgexodus PostgreSQL Extension
+# pgexodus a PostgreSQL Extension
+
+TODO: Reimplement extract and custom data types separately.
+
+Provide conversions from text instead of performing extract and conversion in one step.
+
+## Reference
+
+https://www.postgresql.org/docs/current/extend-extensions.html
 
 ## Provides
 
-EXODUS database sort select statement
-
-relies the following functions:
+Dependencies of the EXODUS database select statement which depends on the following functions:
 
 * exodus.extract_text
 * exodus.extract_number
@@ -13,7 +19,7 @@ relies the following functions:
 * exodus.extract_datetime
 * exodus.count
 
-In order to do things like sort and select (filter) on various types of information.
+to sort and select (filter) correctly depending on the data type.
 
 ```
 select invoices with amount > 1000.00 by date by time
@@ -35,9 +41,17 @@ make test
 
 ## Using
 
+No manual usage should be required since the extension will be loaded during exodus installation and operation.
+
 ```
 create extension pgexodus;
 ```
+
+An extremely quick sanity check/test is performed every time the extension is created.
+
+Like all extensions:
+- It needs to be created individually in every database.
+- If created in the template1 database then all new databases will inherit the extension.
 
 ## Dependencies
 
@@ -49,27 +63,22 @@ To build the extensions you need to have:
 You can install these dependencies on Ubuntu (18.04 or later) using:
 
 ```
-apt install cmake postgresql postgresql-server-dev-1*
+apt update
+apt install cmake postgresql postgresql-server-dev-all
 ```
 
 ## Building
 
-To build the extensions for installation using the default prefix
-(`/usr/local`) and keep the build files separate from the source
-files:
+```./install.sh```
 
 ```
-mkdir build
-cd build
-cmake ..
-cmake --build ..
-```
+        apt update
+        apt install cmake git postgresql postgresql-server-dev-all
 
-If you want to use a different version of Postgres than the default,
-you can set `PGPATH` to point to the prefix where you have installed
-PostgreSQL.
+        rm build -rf
+        mkdir build
 
+        cmake . -B build
+        cmake --build build
+        cmake --install build
 ```
-cmake .. -DPGPATH=/usr/local/pgsql/15
-```
-
