@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        UBUNTU_VER: [22.04, 20.04]
+        UBUNTU_VER: [23.04, 20.04]
 
     runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
@@ -26,8 +26,10 @@ jobs:
       run: |
         sudo apt-get update
         UBUNTU_VER=`lsb_release -rs`
+        [[ $UBUNTU_VER == 23.04 ]] && PG_VER=16
         [[ $UBUNTU_VER == 22.04 ]] && PG_VER=14
         [[ $UBUNTU_VER == 20.04 ]] && PG_VER=12
+        [[ $UBUNTU_VER == 18.04 ]] && PG_VER=10
         sudo apt-get install -y postgresql-$PG_VER postgresql-server-dev-$PG_VER
         sudo systemctl start postgresql
 
