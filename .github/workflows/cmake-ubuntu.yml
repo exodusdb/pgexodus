@@ -15,28 +15,27 @@ jobs:
 
     strategy:
       matrix:
-        UBUNTU_VER: [23.04, 20.04]
+        UBUNTU_VER: [20.04]
+        PG_VER: [12]
 
     runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install the default postgres server and dev files
+    - name: Remove all preexisting postgresql
+      run: sudo apt-get remove -y postgresql* || true
+      
+    - name: Install the required postgres server, client and dev files
       run: |
+        set -x
         sudo apt-get update
-        UBUNTU_VER=`lsb_release -rs`
-        [[ $UBUNTU_VER == 23.04 ]] && PG_VER=16
-        [[ $UBUNTU_VER == 22.04 ]] && PG_VER=14
-        [[ $UBUNTU_VER == 20.04 ]] && PG_VER=12
-        [[ $UBUNTU_VER == 18.04 ]] && PG_VER=10
-
-        sudo apt-get remove -y postgresql postgresql-* || true
-        sudo apt-get install -y postgresql-$PG_VER postgresql-server-dev-$PG_VER
+        sudo apt-get install -y postgresql-$PG_VER postgresql-server-dev-$PG_VER postgresql-client-$PG_VER
         sudo systemctl start postgresql
 
     - name: Show postgresql config
       run: |
+        set -x
         pg_config
         psql --version
         apt search postgresql|grep ^postgresql
@@ -44,7 +43,9 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: |
+        set -x
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       # Build your program with the given configuration
@@ -59,7 +60,8 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-
+        set -x
+        
         # Ensure postgresql is running
         pgrep postgres -a || sudo systemctl start postgresql
 
