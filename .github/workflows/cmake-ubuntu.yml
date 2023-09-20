@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        ubuntu_ver: [22.04]
+        ubuntu_ver: [20.04]
 
     runs-on: ubuntu-${{ matrix.ubuntu_ver }}
 
@@ -26,6 +26,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-server-dev-$(apt info postgresql|&grep Depends|cut -d- -f2)
+
+    - name: Query pg_config
+      run: pg_query
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
