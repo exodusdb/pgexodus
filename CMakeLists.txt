@@ -27,6 +27,7 @@ execute_process(
 	OUTPUT_VARIABLE _pg_server_inc_dirs
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message("_pg_server_inc_dirs = " ${_pg_server_inc_dirs})
 
 # Find PostgreSQL package lib dir
 execute_process(
@@ -34,6 +35,7 @@ execute_process(
 	OUTPUT_VARIABLE _pg_pkglibdir
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message("_pg_pkglibdir = " ${_pg_pkglibdir})
 
 # Find PostgreSQL share dir
 execute_process(
@@ -41,6 +43,7 @@ execute_process(
 	OUTPUT_VARIABLE _pg_sharedir
 	OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message("_pg_sharedir = " ${_pg_sharedir})
 
 # Set the extension source files
 set(SOURCES

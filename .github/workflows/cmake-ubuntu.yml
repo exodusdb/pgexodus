@@ -15,26 +15,27 @@ jobs:
 
     strategy:
       matrix:
-        ubuntu_ver: [20.04]
+        UBUNTU_VER: [20.04]
 
-    runs-on: ubuntu-${{ matrix.ubuntu_ver }}
+    runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Postgresql
+    - name: Install the default postgres server
       run: |
-        #https://wiki.postgresql.org/wiki/Apt
-        sudo apt-get update
-        sudo apt-get install -y postgresql-common
-        sudo yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 
+        #https://wiki.postgresql.org/wiki/Apt
+        #sudo apt-get install -y postgresql-common
+        #sudo yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+        sudo apt-get update
         sudo apt-get install -y postgresql
 
-    - name: Install Postgresql dev package
+    - name: Install the specific postgres dev package
       run: |
         #$(apt info postgresql|&grep Depends|cut -d- -f2)
-        sudo apt-get install -y postgresql-server-dev-$(psql --version|cut -d' ' -f3|cut -d. -f1)
+        SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2)
+        sudo apt-get install -y postgresql-server-dev-$SERVER_VER
 
     - name: Query PostgreSQL version and config
       run: |
