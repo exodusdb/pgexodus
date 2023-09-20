@@ -30,7 +30,7 @@ jobs:
       run: |
         set -x
         sudo apt-get update
-        sudo apt-get install -y postgresql-${{ matrix.UBUNTU_VER }} postgresql-server-dev-${{ matrix.UBUNTU_VER }} postgresql-client-${{ matrix.UBUNTU_VER }} postgresql-common
+        sudo apt-get install -y postgresql-${{ matrix.PG_VER }} postgresql-server-dev-${{ matrix.PG_VER }} postgresql-client-${{ matrix.PG_VER }} postgresql-common
         sudo systemctl start postgresql
 
     - name: Show postgresql config
