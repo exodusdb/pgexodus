@@ -24,6 +24,8 @@ jobs:
 
     - name: Install Postgresql and its dev package
       run: |
+        ps -ef
+        systemctl start postgresql
         sudo apt-get update
         sudo apt-get install -y postgresql postgresql-server-dev-$(apt info postgresql|&grep Depends|cut -d- -f2)
 
