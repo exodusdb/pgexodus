@@ -67,18 +67,21 @@ apt update
 apt install cmake postgresql postgresql-server-dev-all
 ```
 
-## Building
+## Build and install
 
 ```./install.sh```
 
 ```
-        apt update
-        apt install cmake git postgresql postgresql-server-dev-all
+apt update
+apt install cmake git postgresql postgresql-server-dev-all
 
-        rm build -rf
-        mkdir build
+rm build -rf
+mkdir build
 
-        cmake . -B build
-        cmake --build build
-        cmake --install build
+cmake . -B build
+cmake --build build
+cmake --install build
 ```
+## Uninstall
+
+Remove the files listed in build/install_manifest.txt
