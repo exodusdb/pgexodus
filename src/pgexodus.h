@@ -107,8 +107,8 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 
-#include "postgres.h"
-#include "fmgr.h"
+#include <postgres.h>
+#include <fmgr.h>
 
 /*#include "utils/geo_decls.h"*/
 #include <utils/timestamp.h> //for PG_RETURN_TIMESTAMP
