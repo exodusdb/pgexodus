@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         include:
-          #- UBUNTU_VER: 20.04
-          #  PG_VER: 12
-          #- UBUNTU_VER: 22.04
-          #  PG_VER: 14
-          - UBUNTU_VER: 23.04
+          - UBUNTU_VER: 20.04
+            PG_VER: 12
+          - UBUNTU_VER: 22.04
+            PG_VER: 14
+          - UBUNTU_VER: 22.04
             PG_VER: 15
     runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
 
@@ -31,7 +31,12 @@ jobs:
       run: |
         set -x
         sudo DEBIAN_FRONTEND=noninteractive apt-get purge -yqq postgresql* || true
-      
+
+    - name: Install postgresql repos for versions 10 - 16+
+      run: |
+        sudo apt install -yqq postgresql-common
+        yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+
     - name: Install the required postgres server, client and dev files
       run: |
         set -x
