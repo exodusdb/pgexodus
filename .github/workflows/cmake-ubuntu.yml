@@ -22,31 +22,19 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install the default postgres server
+    - name: Install the default postgres server and dev files
       run: |
-
-        #https://wiki.postgresql.org/wiki/Apt
-        #sudo apt-get install -y postgresql-common
-        #sudo yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
         sudo apt-get update
-        sudo apt-get install -y postgresql
+        UBUNTU_VER=`lsb_release -rs`
+        [[ $UBUNTU_VER == 22.04 ]] && PG_VER=14
+        [[ $UBUNTU_VER == 20.04 ]] && PG_VER=12
+        sudo apt-get install -y postgresql-$PG_VER postgresql-server-dev-$PG_VER
         sudo systemctl start postgresql
 
     - name: Show postgresql config
-      run: pg_config
-      
-    - name: Install the specific postgres dev package
       run: |
-        ##$(apt info postgresql|&grep Depends|cut -d- -f2)
-        #sudo -u postgres psql -Atq -c 'select version();'
-        #SERVER_VER=$(sudo -u postgres psql -Atq -c 'select version();'|cut -d' ' -f2|cut -d. -f1)
-        #sudo apt-get install -y postgresql-server-dev-$SERVER_VER
-        sudo apt-get install -y postgresql-server-dev-1*
-        
-    - name: Query PostgreSQL version and config
-      run: |
-        psql --version
         pg_config
+        psql --version
         apt search postgresql|grep ^postgresql
 
     - name: Configure CMake
