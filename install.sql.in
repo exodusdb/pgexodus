@@ -4,7 +4,7 @@
 
 -- https://www.postgresql.org/docs/current/extend-extensions.html
 
-\echo Use "CREATE EXTENSION @EXTENSION_NAME@" to load this file. \quit
+\echo Use "CREATE EXTENSION @EXTENSION_NAME@" to load this file because its objects should be owned by it so that they can all be created and deleted together.\quit
 
 -- Create schema
 ----------------

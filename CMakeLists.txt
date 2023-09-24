@@ -90,9 +90,13 @@ install(TARGETS ${EXTENSION_NAME}
 
 # Install the control files
 install(FILES
-    "${CMAKE_BINARY_DIR}/${EXTENSION_NAME}.control"
-    "${CMAKE_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
+    "${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}.control"
+    "${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
     DESTINATION "${_pg_sharedir}/extension"
 )
 
-add_test(NAME pgexodus_test COMMAND sudo -u postgres psql postgres -c "drop extension if exists pgexodus;create extension pgexodus")
+#add_test(NAME pgexodus_test COMMAND sudo -u postgres psql postgres -c "drop extension if exists pgexodus;create extension pgexodus")
+add_test(NAME pgexodus_test
+	COMMAND
+	sudo -u postgres ${_pg_pkglibdir}/pgxs/src/test/regress/pg_regress --outputdir=/tmp --load-extension=pgexodus
+)
