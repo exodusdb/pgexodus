@@ -1,102 +1,187 @@
-cmake_minimum_required(VERSION 3.0)
-project(pgexodus C)
+cmake_minimum_required(VERSION 3.15)
 
-# Set the shared library name and version
-set(EXTENSION_NAME pgexodus)
-set(EXTENSION_VERSION 1.0)
+# Init
 
-include(CTest)
-enable_testing()
+	message("--------------------")
+	message("-- CMAKE PGEXODUS --")
+	message("--------------------")
 
-# Set the minimum required PostgreSQL version
-set(PGSQL_MIN_VERSION "10.0.0")
+# Project
 
-# Find PostgreSQL
-#https://cmake.org/cmake/help/latest/module/FindPostgreSQL.html
-find_package(PostgreSQL ${PGSQL_MIN_VERSION} REQUIRED)
-message("INCLUDEDIR-SERVER           = " ${INCLUDEDIR-SERVER})
-message("PostgreSQL_LIBRARIES        = " ${PostgreSQL_LIBRARIES})
-message("PostgreSQL_INCLUDE_DIRS     = " ${PostgreSQL_INCLUDE_DIRS})
-message("PostgreSQL_LIBRARY_DIRS     = " ${PostgreSQL_LIBRARY_DIRS})
-message("PostgreSQL_VERSION_STRING   = " ${PostgreSQL_VERSION_STRING})
-message("PostgreSQL_TYPE_INCLUDE_DIR = " ${PostgreSQL_TYPE_INCLUDE_DIR})
+	project(pgexodus C)
+	set(EXTENSION_NAME    pgexodus)
+	set(EXTENSION_VERSION 1.0)
 
-# Find PostgreSQL include dir
-execute_process(
-	COMMAND pg_config --includedir-server
-	OUTPUT_VARIABLE _pg_server_inc_dirs
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message("_pg_server_inc_dirs = " ${_pg_server_inc_dirs})
+# C options
 
-# Find PostgreSQL package lib dir
-execute_process(
-	COMMAND pg_config --pkglibdir
-	OUTPUT_VARIABLE _pg_pkglibdir
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message("_pg_pkglibdir = " ${_pg_pkglibdir})
+	set(CMAKE_CC_STANDARD 20)
+#	if(NOT CMAKE_BUILD_TYPE)
+#		set(
+#			#CMAKE_BUILD_TYPE "RelWithDebInfo"
+#			CMAKE_BUILD_TYPE "RELEASE"
+#			CACHE STRING "Default build type: RelWithDebInfo"
+#			FORCE
+#		)
+#	endif()
+	set(CMAKE_BUILD_TYPE "RELEASE")
 
-# Find PostgreSQL share dir
-execute_process(
-	COMMAND pg_config --sharedir
-	OUTPUT_VARIABLE _pg_sharedir
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message("_pg_sharedir = " ${_pg_sharedir})
+	message("CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+    message("CMAKE_C_FLAGS is ${CMAKE_C_FLAGS}")
+    message("CMAKE_C_FLAGS_DEBUG is ${CMAKE_C_FLAGS_DEBUG}")
+    message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
+    message("CMAKE_C_FLAGS_MINSIZEREL is ${CMAKE_C_FLAGS_MINSIZEREL}")
+    message("CMAKE_C_FLAGS_RELWITHDEBINFO is ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 
-# Set the extension source files
-set(SOURCES
-	src/pgexodus.h
-	src/pgexodus.c
-	src/extract.c
-	src/extract_text.c
-	src/extract_date.c
-	src/extract_time.c
-	src/extract_datetime.c
-	src/extract_number.c
-	src/count.c
-)
+# Testing
 
-# Create the shared library for the extension
-add_library(${EXTENSION_NAME} MODULE ${SOURCES})
+#	include(CTest)
+	enable_testing()
 
-# Include PostgreSQL headers
-target_include_directories(${EXTENSION_NAME} PRIVATE ${_pg_server_inc_dirs} ${PostgreSQL_INCLUDE_DIRS})
+# Minimum PostgreSQL version
 
-# Link against PostgreSQL libraries
-target_link_libraries(${EXTENSION_NAME} PRIVATE ${PostgreSQL_LIBRARIES})
+	set(PGSQL_MIN_VERSION "10.0.0")
 
-# Set the required compilation flags
-target_compile_options(${EXTENSION_NAME} PRIVATE -Wall -Werror -Wextra -O3)
+# Custom FindPostgreSQL.cmake
 
-# Set the target properties
-set_target_properties(${EXTENSION_NAME} PROPERTIES
-    PREFIX ""
-    SUFFIX ".so"
-)
+	list(
+		APPEND
+		CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}
+	)
 
-# Create the control file
-configure_file(pgexodus.control.in ${EXTENSION_NAME}.control @ONLY)
+# FindPostgreSQL2.cmake
 
-# Create the install script
-configure_file(install.sql.in ${EXTENSION_NAME}--${EXTENSION_VERSION}.sql @ONLY)
+	message("PGPATH=$ENV{PGPATH}")
 
-# Install the extension lib
-install(TARGETS ${EXTENSION_NAME}
-    #LIBRARY DESTINATION "${PGSQL_PKGLIBDIR}"
-    LIBRARY DESTINATION "${_pg_pkglibdir}"
-)
+	#https://cmake.org/cmake/help/latest/module/FindPostgreSQL.html
+	find_package(PostgreSQL2 ${PGSQL_MIN_VERSION} REQUIRED)
+	#message("PostgreSQL_PACKAGE_LIBRARY_DIR = " ${PostgreSQL_PACKAGE_LIBRARY_DIR})
+	#message("PostgreSQL_LIBRARIES           = " ${PostgreSQL_LIBRARIES})
+	#message("PostgreSQL_EXTENSION_DIR       = " ${PostgreSQL_EXTENSION_DIR})
+	#message("PostgreSQL_VERSION_STRING      = " ${PostgreSQL_VERSION_STRING})
+	message("-- PostgreSQL_INCLUDE_DIRS        = " ${PostgreSQL_INCLUDE_DIRS})
+	message("-- PostgreSQL_SERVER_INCLUDE_DIRS = " ${PostgreSQL_SERVER_INCLUDE_DIRS})
+	message("-- PostgreSQL_LIBRARY_DIRS        = " ${PostgreSQL_LIBRARY_DIRS})
+	message("PG_VER ${PG_VER}")
 
-# Install the control files
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}.control"
-    "${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
-    DESTINATION "${_pg_sharedir}/extension"
-)
+# Create shared lib
 
-#add_test(NAME pgexodus_test COMMAND sudo -u postgres psql postgres -c "drop extension if exists pgexodus;create extension pgexodus")
-add_test(NAME pgexodus_test
-	COMMAND
-	sudo -u postgres ${_pg_pkglibdir}/pgxs/src/test/regress/pg_regress --outputdir=/tmp --load-extension=pgexodus
-)
+	add_library(
+		${EXTENSION_NAME}
+		MODULE
+		src/pgexodus.h
+		src/pgexodus.c
+		src/extract.c
+		src/extract_text.c
+		src/extract_date.c
+		src/extract_time.c
+		src/extract_datetime.c
+		src/extract_number.c
+		src/count.c
+	)
+
+# lib suffix
+
+	set_target_properties(
+		${EXTENSION_NAME}
+		PROPERTIES
+		PREFIX ""
+		SUFFIX ".so"
+	)
+
+# Source files
+
+	set(
+		SOURCES
+	)
+
+# Include dirs
+
+	target_include_directories(
+		${EXTENSION_NAME}
+		PRIVATE
+		${PostgreSQL_SERVER_INCLUDE_DIRS}
+		#${PostgreSQL_INCLUDE_DIRS}
+	)
+
+## Include dirs
+#
+#	include_directories(
+#		${PostgreSQL_INCLUDE_DIRS}
+#		${PostgreSQL_SERVER_INCLUDE_DIRS}
+#	)
+#
+## Link libs
+#
+#	target_link_libraries(
+#		${EXTENSION_NAME}
+#		PRIVATE
+#		${PostgreSQL_LIBRARIES}
+#	)
+#
+# Compile flags
+#
+#	target_compile_options(
+#		${EXTENSION_NAME}
+#		PRIVATE
+#		-Wall -Werror -Wextra -O3
+#		${PostgreSQL_LIBRARY_DIRS}
+#	)
+
+# Configure the control file
+
+	configure_file(
+		pgexodus.control.in ${EXTENSION_NAME}.control @ONLY
+	)
+
+# Configure the sql script
+
+	configure_file(
+		install.sql.in ${EXTENSION_NAME}--${EXTENSION_VERSION}.sql @ONLY
+	)
+
+# Install
+
+	install(
+		TARGETS ${EXTENSION_NAME}
+		LIBRARY DESTINATION "${PostgreSQL_PACKAGE_LIBRARY_DIR}"
+	)
+
+# Install the control file and sql script
+
+	install(
+		FILES
+			"${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}.control"
+			"${CMAKE_CURRENT_BINARY_DIR}/${EXTENSION_NAME}--${EXTENSION_VERSION}.sql"
+		DESTINATION ${PostgreSQL_EXTENSION_DIR}
+	)
+
+# Test - using pg_regress
+
+
+	add_test(
+		NAME pgexodus_test
+		COMMAND
+			bash -c "\
+				sudo -u postgres\
+				${PostgreSQL_PACKAGE_LIBRARY_DIR}/pgxs/src/test/regress/pg_regress\
+				--outputdir=/tmp\
+				--load-extension=pgexodus\
+				--port `grep '^\\s*port\\s*=\\s*\\([0-9]\\)*' /etc/postgresql/${PG_VER}/main/postgresql.conf|grep [0-9]* -o`\
+			"
+	)
+
+# Exit
+
+#	message("--PGEXODUS CMAKE EXIT --")
+
+#	/usr/bin/cc
+#		-Dpgexodus_EXPORTS
+#		-I/usr/include/postgresql
+#		-I/usr/include/postgresql/14/server
+#		-O3 -DNDEBUG -fPIC -MD
+#		-MT CMakeFiles/pgexodus.dir/src
+#		/pgexodus.c.o
+#		-MF CMakeFiles/pgexodus.dir/src/pgexodus.c.o.d
+#		-o CMakeFiles/pgexodus.dir/src/pgexodus.c.o
+#		-c /root/exodus/exodus/pgexodus/src/pgexodus.c
+

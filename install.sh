@@ -1,15 +1,32 @@
 #!/bin/bash
 set -euxo pipefail
-
+:
+: --------------------------------
+: Build, install and test pgexodus
+: --------------------------------
+:
+: Get dependencies
+: ----------------
+:
 	apt update
 	apt install cmake git postgresql postgresql-server-dev-all
-
+:
+: Build
+: -----
+:
 	rm build -rf
 	mkdir build
-
 	cmake . -B build
 	cmake --build build
+:
+: Install
+: -------
+:
 	cmake --install build
+:
+: Test
+: ----
+:
 	cd build
 	ctest
 :

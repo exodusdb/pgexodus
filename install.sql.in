@@ -1,6 +1,14 @@
 -- =================================
 -- Create the @EXTENSION_NAME@ @EXTENSION_VERSION@ functions
 -- =================================
+--
+-- Creates the following - in whatever database the extension is being created in.
+--
+-- 1. Schema exodus
+-- 2. Role exodus
+-- 3. Functions exodus.extract_text etc.
+--
+-- and tests that the functions work.
 
 -- https://www.postgresql.org/docs/current/extend-extensions.html
 
@@ -11,8 +19,8 @@
 
 	CREATE SCHEMA IF NOT EXISTS exodus;
 
--- A function to create a role
-------------------------------
+-- A function to create a role if not exists
+--------------------------------------------
 
 	CREATE OR REPLACE FUNCTION exodus.create_role_if_not_exists(role_name TEXT) RETURNS VOID AS $$
 	BEGIN
@@ -22,7 +30,7 @@
 	END;
 	$$ LANGUAGE plpgsql;
 
--- Create role
+-- Role Exodus
 --------------
 
 	SELECT exodus.create_role_if_not_exists('exodus');
