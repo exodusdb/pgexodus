@@ -5,47 +5,14 @@
 extern "C" {
 #endif
 
-#if 1
-
-/* not using invalid UTF8 characters any more
-#define FM_ '\xFE'
-#define VM_ '\xFD'
-#define SM_ '\xFC'
-*/
-
-#define FM_ '\x1E'
-#define VM_ '\x1D'
-#define SM_ '\x1C'
-
-#else
-//NB
-//WHATEVER UNICODE CHARACTERS ARE CHOSEN MUST FIT IN TWO BYTES OF UTF8 FOR THIS IMPLEMENTATION TO WORK
-
-//using NKO page 0700 - sadly right to left flavoured
-#define FM_ '\u07FE'
-#define VM_ '\u07FD'
-#define SM_ '\u07FC'
-
-#define FM_UTF8_1 '\xDF'
-#define FM_UTF8_2 '\xBE'
-
-#define VM_UTF8_1 FM_UTF8_1
-#define VM_UTF8_2 '\xBD'
-
-#define SM_UTF8_1 FM_UTF8_1
-#define SM_UTF8_2 '\xBC'
-
-#define FM_UTF8 '\uDFBE'
-#define VM_UTF8 '\uDFBD'
-#define SM_UTF8 '\uDFBC'
-#endif
-
 /*
 TODO algorithm could be improved for value and subvalue extraction
 by not searching for the end of the field before starting to look for the multivalue
 and for  extracting subvalues, and not searching for the end of the multivalue
 before starting to look for the subvalue.
 */
+
+/* See extract2.c which is the same algo but uses ptr/iterators instead of indexes */
 void extract(char * instring, int inlength, int fieldno, int valueno, int subvalueno, int* outstart, int* outlength)
 {
 	int start_pos;

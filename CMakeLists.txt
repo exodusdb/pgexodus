@@ -70,7 +70,7 @@ cmake_minimum_required(VERSION 3.15)
 		MODULE
 		src/pgexodus.h
 		src/pgexodus.c
-		src/extract.c
+		src/extract2.c
 		src/extract_text.c
 		src/extract_date.c
 		src/extract_time.c
