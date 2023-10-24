@@ -67,7 +67,11 @@ it causes undefined behavior. See strtod for a more robust cross-platform altern
 #include <stdio.h>
 #include <string.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+
 #include <postgres.h>
+
 #if __has_include(<varatt.h>)
 //VARSIZE etc. was split out from postgres.h in Postgres V16+
 #include <varatt.h>
@@ -76,6 +80,8 @@ it causes undefined behavior. See strtod for a more robust cross-platform altern
 
 #include <utils/timestamp.h> //for PG_RETURN_TIMESTAMP
 #include <utils/date.h> //for PG_RETURN_TIME_ADT
+
+#pragma clang diagnostic pop
 
 #ifndef int4
 #define int4 int32
