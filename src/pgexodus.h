@@ -67,8 +67,11 @@ it causes undefined behavior. See strtod for a more robust cross-platform altern
 #include <stdio.h>
 #include <string.h>
 
+// /usr/include/postgresql/16/server/fmgr.h:434:25:
+// warning: identifier '_PG_init' is reserved because it starts with '_' followed by a capital letter [-Wreserved-identifier]
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreserved-id-macro"
+#pragma clang diagnostic ignored "-Wreserved-identifier"
 
 #include <postgres.h>
 
@@ -82,6 +85,8 @@ it causes undefined behavior. See strtod for a more robust cross-platform altern
 #include <utils/date.h> //for PG_RETURN_TIME_ADT
 
 #pragma clang diagnostic pop
+
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 
 #ifndef int4
 #define int4 int32

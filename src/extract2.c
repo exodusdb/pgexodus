@@ -1,3 +1,5 @@
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+
 #include <stdio.h>
 #include <string.h>
 
