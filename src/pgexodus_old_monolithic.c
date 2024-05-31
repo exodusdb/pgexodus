@@ -600,7 +600,7 @@ exodus_extract_text(PG_FUNCTION_ARGS)
 
 	text* output;
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 /*
 	if (PG_ARGISNULL(0))
 	{
@@ -647,7 +647,7 @@ exodus_extract_text2(PG_FUNCTION_ARGS)
 	//VARHDRSZ
 
 	text *output;
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
@@ -685,7 +685,7 @@ exodus_extract_date(PG_FUNCTION_ARGS)
 
 	char intstr[21]="12345";
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//intstr="12345";
 	intstr[20]='\0';
@@ -736,7 +736,7 @@ exodus_extract_time(PG_FUNCTION_ARGS)
 	int4 picktime;
 	Interval *output;
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
@@ -793,7 +793,7 @@ exodus_extract_time(PG_FUNCTION_ARGS)
 
 	char intstr[21]="12345";
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//intstr="12345";
 	intstr[20]='\0';
@@ -844,7 +844,7 @@ exodus_extract_datetime(PG_FUNCTION_ARGS)
 	Timestamp pickdatetime;
 	char datetimestr[21];
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
@@ -890,7 +890,7 @@ exodus_extract_number(PG_FUNCTION_ARGS)
 	double doublenum;
 	char doublestr[21];
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
@@ -927,7 +927,7 @@ exodus_extract_number(PG_FUNCTION_ARGS)
 //Datum
 //exodus_extract_sort(PG_FUNCTION_ARGS)
 //{
-//	GETINPUTSTARTLENGTH
+//#include "getinputstartlength.cpp"
 //
 //
 ///*
@@ -968,7 +968,7 @@ exodus_extract_sort(PG_FUNCTION_ARGS)
 	int ninserted;
 	char digit2;
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//prepare a new output
 	//text	   *output = (text *) palloc(VARSIZE(input));

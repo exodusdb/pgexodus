@@ -17,7 +17,7 @@ exodus_extract_time(PG_FUNCTION_ARGS)
 	int4 picktime;
 	Interval *output;
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
@@ -74,7 +74,7 @@ exodus_extract_time(PG_FUNCTION_ARGS)
 
 	char intstr[21]="12345";
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//intstr="12345";
 	intstr[20]='\0';

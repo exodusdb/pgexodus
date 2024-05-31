@@ -15,7 +15,7 @@ exodus_extract_date(PG_FUNCTION_ARGS)
 
 	char intstr[21]="12345";
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//intstr="12345";
 	intstr[20]='\0';

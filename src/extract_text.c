@@ -13,7 +13,7 @@ exodus_extract_text(PG_FUNCTION_ARGS)
 
 	text* output;
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 /*
 	if (PG_ARGISNULL(0))
 	{
@@ -60,7 +60,7 @@ exodus_extract_text2(PG_FUNCTION_ARGS)
 	//VARHDRSZ
 
 	text *output;
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)

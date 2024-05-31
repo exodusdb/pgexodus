@@ -14,7 +14,7 @@ exodus_extract_datetime(PG_FUNCTION_ARGS)
 	Timestamp pickdatetime;
 	char datetimestr[21];
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)

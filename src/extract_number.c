@@ -14,7 +14,7 @@ exodus_extract_number(PG_FUNCTION_ARGS)
 	double doublenum;
 	char doublestr[21];
 
-	GETINPUTSTARTLENGTH
+#include "getinputstartlength.cpp"
 
 	//return NULL for zero length string
 	if (outlen==0)
