@@ -6,6 +6,9 @@
 //
 //  ERROR:  incompatible library "/usr/lib/postgresql/12/lib/pgexodus.so": missing magic block
 
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+
 /*
 
 * PostgreSQL example C functions.
