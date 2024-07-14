@@ -63,6 +63,12 @@ cmake_minimum_required(VERSION 3.15)
 	message("-- PostgreSQL_LIBRARY_DIRS        = " ${PostgreSQL_LIBRARY_DIRS})
 	message("PG_VER ${PG_VER}")
 
+	add_compile_options(
+		-Wno-ignored-attributes
+		# clang 18 warning
+		#warning: 'format' attribute argument not supported: gnu_printf [-Wignored-attributes]
+	)
+
 # Create shared lib
 
 	add_library(
