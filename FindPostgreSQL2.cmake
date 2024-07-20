@@ -93,7 +93,7 @@ if(PostgreSQL_FOUND)
   separate_arguments(_pg_ldflags_ex)
 
   string(REGEX MATCH "[0-9[0-9]+" PG_VER ${_pg_version})
-  message(STATUS "-- PG_VER ${PG_VER}")
+  message(STATUS "PG_VER ${PG_VER}")
 
   set(_server_lib_dirs ${_pg_libdir} ${_pg_pkglibdir})
   set(_server_inc_dirs ${_pg_pkgincludedir} ${_pg_includedir_server})

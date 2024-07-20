@@ -25,12 +25,13 @@ cmake_minimum_required(VERSION 3.15)
 #	endif()
 	set(CMAKE_BUILD_TYPE "RELEASE")
 
-	message("CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-    message("CMAKE_C_FLAGS is ${CMAKE_C_FLAGS}")
-    message("CMAKE_C_FLAGS_DEBUG is ${CMAKE_C_FLAGS_DEBUG}")
-    message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
-    message("CMAKE_C_FLAGS_MINSIZEREL is ${CMAKE_C_FLAGS_MINSIZEREL}")
-    message("CMAKE_C_FLAGS_RELWITHDEBINFO is ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+	message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+    message("CMAKE_C_FLAGS are  ${CMAKE_C_FLAGS}")
+
+#    message("CMAKE_C_FLAGS_DEBUG is ${CMAKE_C_FLAGS_DEBUG}")
+#    message("CMAKE_C_FLAGS_RELEASE is ${CMAKE_C_FLAGS_RELEASE}")
+#    message("CMAKE_C_FLAGS_MINSIZEREL is ${CMAKE_C_FLAGS_MINSIZEREL}")
+#    message("CMAKE_C_FLAGS_RELWITHDEBINFO is ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
 
 # Testing
 
@@ -58,10 +59,10 @@ cmake_minimum_required(VERSION 3.15)
 	#message("PostgreSQL_LIBRARIES           = " ${PostgreSQL_LIBRARIES})
 	#message("PostgreSQL_EXTENSION_DIR       = " ${PostgreSQL_EXTENSION_DIR})
 	#message("PostgreSQL_VERSION_STRING      = " ${PostgreSQL_VERSION_STRING})
-	message("-- PostgreSQL_INCLUDE_DIRS        = " ${PostgreSQL_INCLUDE_DIRS})
-	message("-- PostgreSQL_SERVER_INCLUDE_DIRS = " ${PostgreSQL_SERVER_INCLUDE_DIRS})
-	message("-- PostgreSQL_LIBRARY_DIRS        = " ${PostgreSQL_LIBRARY_DIRS})
-	message("PG_VER ${PG_VER}")
+#	message("-- PostgreSQL_INCLUDE_DIRS        = " ${PostgreSQL_INCLUDE_DIRS})
+#	message("-- PostgreSQL_SERVER_INCLUDE_DIRS = " ${PostgreSQL_SERVER_INCLUDE_DIRS})
+#	message("-- PostgreSQL_LIBRARY_DIRS        = " ${PostgreSQL_LIBRARY_DIRS})
+#	message(STATUS "PG_VER ${PG_VER}")
 
 	add_compile_options(
 		-Wno-ignored-attributes
