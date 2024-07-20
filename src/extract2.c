@@ -1,13 +1,9 @@
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
-
 #include <stdio.h>
 #include <string.h>
 
 #define FM_ '\x1E'
 #define VM_ '\x1D'
 #define SM_ '\x1C'
-
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 
 /*
 TODO algorithm could be improved for value and subvalue extraction
