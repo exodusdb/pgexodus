@@ -6,13 +6,16 @@
 //
 //  ERROR:  incompatible library "/usr/lib/postgresql/12/lib/pgexodus.so": missing magic block
 
-#if __clang_major > 12
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
-#pragma clang diagnostic ignored "-Wreserved-identifier"
-#pragma clang diagnostic ignored "-Wreserved-id-macro"
-#pragma clang diagnostic ignored "-Wreserved-identifier"
-#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+//#warning: 'format' attribute argument not supported: gnu_printf [-Wignored-attributes]
+#if __clang_major__ >= 12
+#	pragma clang diagnostic ignored "-Wignored-attributes"
 #endif
+
+//#if __clang_major > 12
+//#	pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+//#	pragma clang diagnostic ignored "-Wreserved-identifier"
+//#	pragma clang diagnostic ignored "-Wreserved-id-macro"
+//#endif
 
 /*
 
