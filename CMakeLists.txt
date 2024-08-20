@@ -87,6 +87,8 @@ cmake_minimum_required(VERSION 3.15)
 		src/count.c
 	)
 
+	target_compile_options(${EXTENSION_NAME} PUBLIC -Wno-unsafe-buffer-usage -Wno-reserved-identifier)
+
 # lib suffix
 
 	set_target_properties(
