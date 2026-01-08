@@ -132,6 +132,7 @@
 	select exodus.assert((exodus.count('''','a')  = 0), 'exodus.count('''',''a'') = 0');
 	select exodus.assert((exodus.count('0','a')   = 0), 'exodus.count(''0'',''a'') = 0');
 	select exodus.assert((exodus.count('aaa','a') = 3), 'exodus.count(''aaa'',''a'') = 3');
+	select exodus.assert((exodus.count('aaaa','aa') = 2), 'exodus.count(''aaaa'',''aa'') = 2');
 
 -- bad dates, times and numbers
 
