@@ -30,7 +30,14 @@ exodus_extract_text(PG_FUNCTION_ARGS)
 		extract(VARDATA(input), VARSIZE(input)-VARHDRSZ, fieldno, valueno, subvalueno, &outstart, &outlen);
 	}
 */
-//PG_RETURN_NULL();
+    // Optional optimization: fast path for empty result (common case!)
+    if (outlen <= 0) {
+        output = (text *) palloc(VARHDRSZ);
+        SET_VARSIZE(output, VARHDRSZ);
+        PG_RETURN_TEXT_P(output);
+    }
+	
+	//PG_RETURN_NULL();
 	//prepare a new output
 	//text	   *output = (text *) palloc(VARSIZE(input));
 	output = (text *) palloc(VARHDRSZ+(size_t)outlen);
