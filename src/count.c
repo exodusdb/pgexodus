@@ -8,12 +8,12 @@ PG_FUNCTION_INFO_V1(exodus_count);
 Datum
 exodus_count(PG_FUNCTION_ARGS)
 {
-    text *txt_data = PG_GETARG_TEXT_PP(0);   // input string
-    text *txt_find = PG_GETARG_TEXT_PP(1);   // substring to count
-
     // Handle NULL inputs
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
         PG_RETURN_INT32(0);
+
+    text *txt_data = PG_GETARG_TEXT_PP(0);   // input string
+    text *txt_find = PG_GETARG_TEXT_PP(1);   // substring to count
 
     int len_data = VARSIZE(txt_data) - VARHDRSZ;
     int len_find = VARSIZE(txt_find) - VARHDRSZ;
