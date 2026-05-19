@@ -6,85 +6,34 @@ Datum
 exodus_extract_text(PG_FUNCTION_ARGS)
 {
 
-	//PG_GETARG_TEXT_P(n) gives you a pointer to the data structure of parameter n
-	//VARDATA() gives you a pointer to the data region of a struct.
+	//PG_GETARG_TEXT_PP(n) gives you a pointer to the data structure of parameter n
+	//VARDATA_ANY() gives you a pointer to the data region of a struct.
 	//VARSIZE() gives you the total size of the structure
 	//VARHDRSZ
 
 	text* output;
 
-#include "getinputstartlength.cpp"
-/*
-	if (PG_ARGISNULL(0))
-	{
-		outstart=0;
-		outlen=0;
-	}
-	else
-	{
-		//get a pointer to the first parameter (0)
-		input = PG_GETARG_TEXT_P(0);
-		fieldno = PG_GETARG_INT32(1);
-		valueno = PG_GETARG_INT32(2);
-		subvalueno = PG_GETARG_INT32(3);
-		extract(VARDATA(input), VARSIZE(input)-VARHDRSZ, fieldno, valueno, subvalueno, &outstart, &outlen);
-	}
-*/
+	#include "getinputstartlength.c"
+
     // Optional optimization: fast path for empty result (common case!)
     if (outlen <= 0) {
         output = (text *) palloc(VARHDRSZ);
         SET_VARSIZE(output, VARHDRSZ);
         PG_RETURN_TEXT_P(output);
     }
-	
+
 	//PG_RETURN_NULL();
-	//prepare a new output
-	//text	   *output = (text *) palloc(VARSIZE(input));
+	// Prepare a new output
 	output = (text *) palloc(VARHDRSZ+(size_t)outlen);
 
-	//set the complete size of the output
+	// Set the complete size of the output
 	//SET_VARSIZE(output,VARSIZE(input));
 	SET_VARSIZE(output,VARHDRSZ+(size_t)outlen);
 
-	//copy the input to the output
-	memcpy((void *) VARDATA(output),			// destination
-		   (void *) (VARDATA(input)+outstart),	// starting from
-		   (size_t)outlen);						// how many bytes
-
-	PG_RETURN_TEXT_P(output);
-
-}
-
-PG_FUNCTION_INFO_V1(exodus_extract_text2);
-
-Datum
-exodus_extract_text2(PG_FUNCTION_ARGS)
-{
-
-	//PG_GETARG_TEXT_P(n) gives you a pointer to the data structure of parameter n
-	//VARDATA() gives you a pointer to the data region of a struct.
-	//VARSIZE() gives you the total size of the structure
-	//VARHDRSZ
-
-	text *output;
-#include "getinputstartlength.cpp"
-
-	//return NULL for zero length string
-	if (outlen==0)
-		PG_RETURN_NULL();
-
-	//prepare a new output
-	//text	   *output = (text *) palloc(VARSIZE(input));
-	output = (text *) palloc(VARHDRSZ+(size_t)outlen);
-
-	//set the complete size of the output
-	SET_VARSIZE(output,VARSIZE(input));
-	SET_VARSIZE(output,VARHDRSZ+(size_t)outlen);
-
-	//copy the input to the output
-	memcpy((void *) VARDATA(output),			// destination
-		   (void *) (VARDATA(input)+outstart),	// starting from
-		   (size_t)outlen);						// how many bytes
+	// Copy the input to the output
+	memcpy((void *) VARDATA_ANY(output),           // destination
+		   (void *) (VARDATA_ANY(input)+outstart), // starting from
+		   (size_t)outlen);                        // how many bytes
 
 	PG_RETURN_TEXT_P(output);
 

@@ -27,20 +27,21 @@ exodus_extract_bytea(PG_FUNCTION_ARGS)
 
 	subvalueno = PG_GETARG_INT32(3);
 
-	extract(VARDATA(input), (int)VARSIZE(input)-VARHDRSZ, fieldno, valueno, subvalueno, &outstart, &outlen);
-
+//	extract(VARDATA_ANY(input), (int)VARSIZE(input)-VARHDRSZ, fieldno, valueno, subvalueno, &outstart, &outlen);
+	int32 input_len = VARSIZE_ANY_EXHDR(input);
+	extract(VARDATA_ANY(input), input_len, fieldno, valueno, subvalueno, &outstart, &outlen);
 
 	//prepare a new output
 	//bytea	   *output = (bytea *) palloc(VARSIZE(input));
 	output = (bytea *) palloc(VARHDRSZ+(size_t)outlen);
 
 	//set the complete size of the output
-	SET_VARSIZE(output,VARSIZE(input));
+//	SET_VARSIZE(output,VARSIZE(input));
 	SET_VARSIZE(output,VARHDRSZ+(size_t)outlen);
 
 	//copy the input to the output
-	memcpy((void *) VARDATA(output),			// destination
-		   (void *) (VARDATA(input)+outstart),	// starting from
+	memcpy((void *) VARDATA_ANY(output),			// destination
+		   (void *) (VARDATA_ANY(input)+outstart),	// starting from
 		   (size_t)outlen);						// how many bytes
 
 	PG_RETURN_BYTEA_P(output);

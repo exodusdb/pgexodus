@@ -6,16 +6,16 @@ Datum
 exodus_extract_date(PG_FUNCTION_ARGS)
 {
 
-	//PG_GETARG_TEXT_P(n) gives you a pointer to the data structure of parameter n
-	//VARDATA() gives you a pointer to the data region of a struct.
+	//PG_GETARG_TEXT_PP(n) gives you a pointer to the data structure of parameter n
+	//VARDATA_ANY() gives you a pointer to the data region of a struct.
 	//VARSIZE() gives you the total size of the structure
 	//VARHDRSZ
 
-	int4 pickdate;
+	int32 pickdate;
 
 	char intstr[21]="12345";
 
-#include "getinputstartlength.cpp"
+	#include "getinputstartlength.c"
 
 	//intstr="12345";
 	intstr[20]='\0';
@@ -33,11 +33,11 @@ exodus_extract_date(PG_FUNCTION_ARGS)
 	}
 
 	memcpy(intstr,			// destination
-		   (void *) (VARDATA(input)+outstart),	// starting from
+		   (void *) (VARDATA_ANY(input)+outstart),	// starting from
 		   (size_t)outlen);						// how many bytes
 	intstr[outlen]='\0';
 
-	//convert the c str to an int
+	//convert the c str to an int32
 	pickdate=outlen;
 	//this will error if not a valid integer
 	//pickdate=pg_atoi(intstr,4,'.');

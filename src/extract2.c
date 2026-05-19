@@ -1,31 +1,30 @@
-#include <stdio.h>
-#include <string.h>
+#include "pgexodus.h"
 
 #define FM_ '\x1E'
 #define VM_ '\x1D'
 #define SM_ '\x1C'
 
 /*
-TODO algorithm could be improved for value and subvalue extraction
-by not searching for the end of the field before starting to look for the multivalue
-and for extracting subvalues, and not searching for the end of the multivalue
-before starting to look for the subvalue.
+	TODO algorithm might be improved for value and subvalue extraction
+	by not searching for the end of the field before starting to look for the multivalue
+	and for extracting subvalues, and not searching for the end of the multivalue
+	before starting to look for the subvalue.
 */
 
 /* See also extract.c which uses indexes instead of pointer/iterators */
 /* This version extract2.c is slightly faster 120/40ns per op compared to 130/45 ns/op for extract.c */
-void extract(char * instring, int inlength, int fieldno, int valueno, int subvalueno, int* outstart, int* outlength)
+void extract(char * instring, int32 inlength, int32 fieldno, int32 valueno, int32 subvalueno, int32* outstart, int32* outlength)
 {
 	char* cptr;
 	char* instr_end_pos;
 
-	int fieldn2;
+	int32 fieldn2;
 	char* field_end_pos;
 
-	int valuen2;
+	int32 valuen2;
 	char* value_end_pos;
 
-	int subvaluen2;
+	int32 subvaluen2;
 	char* subvalue_end_pos;
 
 	/*assert(assigned());*/
@@ -110,8 +109,8 @@ void extract(char * instring, int inlength, int fieldno, int valueno, int subval
 			valueno = 1;
 		else
 		{
-			*outstart = (int)(cptr - instring);
-			*outlength = (int)(field_end_pos - cptr);
+			*outstart = (int32)(cptr - instring);
+			*outlength = (int32)(field_end_pos - cptr);
 			return;
 		}
 	}
@@ -152,8 +151,8 @@ void extract(char * instring, int inlength, int fieldno, int valueno, int subval
 	if (subvalueno <= 0) {
 		if (subvalueno < 0)
 			return;
-		*outstart = (int)(cptr - instring);
-		*outlength = (int)(value_end_pos - cptr);
+		*outstart = (int32)(cptr - instring);
+		*outlength = (int32)(value_end_pos - cptr);
 	}
 
 	/*
@@ -186,9 +185,8 @@ void extract(char * instring, int inlength, int fieldno, int valueno, int subval
 	}
 
 	/* Return the start and length of the current subvalue */
-	*outstart = (int)(cptr - instring);
-	*outlength = (int)(subvalue_end_pos - cptr);
+	*outstart = (int32)(cptr - instring);
+	*outlength = (int32)(subvalue_end_pos - cptr);
 
 	return;
 }
-
