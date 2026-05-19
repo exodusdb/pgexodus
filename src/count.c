@@ -15,11 +15,11 @@ exodus_count(PG_FUNCTION_ARGS)
     text *txt_data = PG_GETARG_TEXT_PP(0);   // input string
     text *txt_find = PG_GETARG_TEXT_PP(1);   // substring to count
 
-    int len_data = VARSIZE(txt_data) - VARHDRSZ;
-    int len_find = VARSIZE(txt_find) - VARHDRSZ;
+    int32 len_data = VARSIZE_ANY_EXHDR(txt_data);
+    int32 len_find = VARSIZE_ANY_EXHDR(txt_find);
 
-    char *data = VARDATA(txt_data);
-    char *find = VARDATA(txt_find);
+    char *data = VARDATA_ANY(txt_data);
+    char *find = VARDATA_ANY(txt_find);
 
     // If find string is empty, standard SQL behavior is to return 0 (or sometimes 1 + length, but 0 is safer)
     if (len_find <= 0)
@@ -28,6 +28,19 @@ exodus_count(PG_FUNCTION_ARGS)
     // If data is shorter than find string, no match possible
     if (len_data < len_find)
         PG_RETURN_INT32(0);
+
+    // === Fast path for single byte (e.g. \x1D) ===
+    if (len_find == 1)
+    {
+        int32 count = 0;
+        char c = *find;
+        for (int32 i = 0; i < len_data; ++i)
+        {
+            if (data[i] == c)
+                count++;
+        }
+        PG_RETURN_INT32(count);
+    }
 
     int count = 0;
     int max_start = len_data - len_find;  // last possible start position
