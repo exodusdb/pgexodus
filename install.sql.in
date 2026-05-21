@@ -114,7 +114,7 @@ CREATE OR REPLACE FUNCTION exodus.count(data text, find text)
 	IMMUTABLE
 AS $$
 	my ($data, $find) = @_;
-	return 0 if !defined $data || !defined $find || $find eq '';
+	return 0 if !defined $data || $data eq '' || !defined $find || $find eq '';
 
 	my $flen = length($find);
 	my $count = 0;
