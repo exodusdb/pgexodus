@@ -51,14 +51,205 @@
 -- Create the functions
 -----------------------
 
-	CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn int4, vn int4, sn int4)     RETURNS text      AS '@EXTENSION_NAME@', 'exodus_extract_text'     LANGUAGE C IMMUTABLE;
-	-- returns zero for zero length strings or NULLS
-	CREATE OR REPLACE FUNCTION exodus.extract_number(data text, fn int4, vn int4, sn int4)   RETURNS float8    AS '@EXTENSION_NAME@', 'exodus_extract_number'   LANGUAGE C IMMUTABLE;
-	CREATE OR REPLACE FUNCTION exodus.count(data text, countchar text)                       RETURNS integer   AS '@EXTENSION_NAME@', 'exodus_count'            LANGUAGE C IMMUTABLE;
-	-- Remaining functions are STRICT therefore never get called with NULLS -- also return NULL if passed zero length strings
-	CREATE OR REPLACE FUNCTION exodus.extract_date(data text, fn int4, vn int4, sn int4)     RETURNS date      AS '@EXTENSION_NAME@', 'exodus_extract_date'     LANGUAGE C IMMUTABLE STRICT;
-	CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn int4, vn int4, sn int4)     RETURNS interval  AS '@EXTENSION_NAME@', 'exodus_extract_time'     LANGUAGE C IMMUTABLE STRICT;
-	CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn int4, vn int4, sn int4) RETURNS timestamp AS '@EXTENSION_NAME@', 'exodus_extract_datetime' LANGUAGE C IMMUTABLE STRICT;
+--	CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn int4, vn int4, sn int4)     RETURNS text      AS '@EXTENSION_NAME@', 'exodus_extract_text'     LANGUAGE C IMMUTABLE;
+--	-- returns zero for zero length strings or NULLS
+--	CREATE OR REPLACE FUNCTION exodus.extract_number(data text, fn int4, vn int4, sn int4)   RETURNS float8    AS '@EXTENSION_NAME@', 'exodus_extract_number'   LANGUAGE C IMMUTABLE;
+--	CREATE OR REPLACE FUNCTION exodus.count(data text, countchar text)                       RETURNS integer   AS '@EXTENSION_NAME@', 'exodus_count'            LANGUAGE C IMMUTABLE;
+--	-- Remaining functions are STRICT therefore never get called with NULLS -- also return NULL if passed zero length strings
+--	CREATE OR REPLACE FUNCTION exodus.extract_date(data text, fn int4, vn int4, sn int4)     RETURNS date      AS '@EXTENSION_NAME@', 'exodus_extract_date'     LANGUAGE C IMMUTABLE STRICT;
+--	CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn int4, vn int4, sn int4)     RETURNS interval  AS '@EXTENSION_NAME@', 'exodus_extract_time'     LANGUAGE C IMMUTABLE STRICT;
+--	CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn int4, vn int4, sn int4) RETURNS timestamp AS '@EXTENSION_NAME@', 'exodus_extract_datetime' LANGUAGE C IMMUTABLE STRICT;
+
+-- NO STRICT - CAN BE CALLED WITH NULL
+-- RETURNS "" FOR NULL INPUT
+
+CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn integer, vn integer, sn integer)
+	RETURNS text
+	LANGUAGE plperl
+	IMMUTABLE
+AS $$
+	my ($data, $fn, $vn, $sn) = @_;
+	return '' if !defined $data || $fn < 1;
+
+	# Field level
+	my $pos = 0;
+	for (1 .. $fn-1) {
+		$pos = index($data, "\x1E", $pos) + 1;
+		return '' if $pos == 0;
+	}
+	my $end = index($data, "\x1E", $pos);
+	my $field = ($end == -1) ? substr($data, $pos) : substr($data, $pos, $end - $pos);
+
+	return $field if $vn < 1;
+
+	# Value level
+	$pos = 0;
+	for (1 .. $vn-1) {
+		$pos = index($field, "\x1D", $pos) + 1;
+		return '' if $pos == 0;
+		$field = substr($field, $pos);
+	}
+	$end = index($field, "\x1D", 0);
+	my $val = ($end == -1) ? $field : substr($field, 0, $end);
+
+	return $val if $sn < 1;
+
+	# Subvalue level
+	$pos = 0;
+	for (1 .. $sn-1) {
+		$pos = index($val, "\x1C", $pos) + 1;
+		return '' if $pos == 0;
+		$val = substr($val, $pos);
+	}
+	$end = index($val, "\x1C", 0);
+	return ($end == -1) ? $val : substr($val, 0, $end);
+$$;
+-- NOT STRICT - CAN BE CALLED WITH NULLS - RETURNS 0
+-- NEVER RETURNS NULL
+-- plperl FOR PERFORMANCE
+
+CREATE OR REPLACE FUNCTION exodus.count(data text, find text)
+	RETURNS integer
+	LANGUAGE plperl
+	IMMUTABLE
+AS $$
+	my ($data, $find) = @_;
+	return 0 if !defined $data || !defined $find || $find eq '';
+
+	my $flen = length($find);
+	my $count = 0;
+	my $pos = 0;
+
+	if ($flen == 1) {
+		my $c = substr($find, 0, 1);
+		while (1) {
+			$pos = index($data, $c, $pos);
+			last if $pos == -1;
+			$count++;
+			$pos += 1;
+		}
+	} else {
+		while (1) {
+			$pos = index($data, $find, $pos);
+			last if $pos == -1;
+			$count++;
+			$pos += $flen;
+		}
+	}
+	return $count;
+$$;
+-- NO STRICT - CAN BE CALLED WITH NULL
+-- RETURNS 0 FOR NULL OR "" INPUT
+-- CAN RETURN 0 FOR NON-NUMERIC
+
+CREATE OR REPLACE FUNCTION exodus.extract_number(data text, fn integer, vn integer, sn integer)
+RETURNS double precision
+LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+    ans text;
+BEGIN
+    ans := exodus.extract_text(data, fn, vn, sn);
+    IF ans = '' THEN
+        RETURN 0;
+    END IF;
+
+    BEGIN
+        RETURN ans::float8;
+    EXCEPTION WHEN others THEN
+        IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
+            RAISE EXCEPTION 'non-numeric value: "%"', ans;
+        ELSE
+            RAISE WARNING 'non-numeric value: "%"', ans;
+            RETURN 0;
+        END IF;
+    END;
+END;
+$$;
+-- STRICT - CANNOT BE CALLED WITH NULL
+-- RETURNS NULL FOR "" INPUT
+-- CAN RETURN EPOC START FOR NON-NUMERIC
+
+CREATE OR REPLACE FUNCTION exodus.extract_date(data text, fn integer, vn integer, sn integer)
+RETURNS date
+LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+DECLARE
+    ans text;
+BEGIN
+    ans := exodus.extract_text(data, fn, vn, sn);
+    IF ans = '' THEN
+        RETURN NULL;
+    END IF;
+
+    BEGIN
+        RETURN '1967-12-31'::date + ans::int;
+    EXCEPTION WHEN others THEN
+        IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
+            RAISE EXCEPTION 'non-numeric value for date: "%"', ans;
+        ELSE
+            RAISE WARNING 'non-numeric value for date: "%"', ans;
+            RETURN '1967-12-31'::date;
+        END IF;
+    END;
+END;
+$$;
+
+
+-- STRICT - CANNOT BE CALLED WITH NULL
+-- RETURNS NULL FOR "" INPUT
+-- CAN RETURN 00:00:00 TIME INTERVAL FOR NON-NUMERIC
+
+CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn integer, vn integer, sn integer)
+RETURNS interval
+LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+DECLARE
+    ans text;
+BEGIN
+    ans := exodus.extract_text(data, fn, vn, sn);
+    IF ans = '' THEN
+        RETURN NULL;
+    END IF;
+
+    BEGIN
+        RETURN make_interval(secs => ans::int);
+    EXCEPTION WHEN others THEN
+        IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
+            RAISE EXCEPTION 'non-numeric value for time: "%"', ans;
+        ELSE
+            RAISE WARNING 'non-numeric value for time: "%"', ans;
+            RETURN '00:00:00'::interval;
+        END IF;
+    END;
+END;
+$$;
+
+-- STRICT - CANNOT BE CALLED WITH NULL
+-- RETURNS NULL FOR "" INPUT
+-- CAN RETURN EPOC START TIMESTAMP FOR NON-NUMERIC
+
+CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn integer, vn integer, sn integer)
+RETURNS timestamp without time zone
+LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+DECLARE
+    ans text;
+BEGIN
+    ans := exodus.extract_text(data, fn, vn, sn);
+    IF ans = '' THEN
+        RETURN NULL;
+    END IF;
+
+    BEGIN
+--      RETURN to_timestamp((split_part(ans,'.',1)::int-732)*86400 + split_part(ans,'.',2)::int);
+        RETURN to_timestamp((COALESCE(NULLIF(split_part(ans, '.', 1), '')::int, 0)-732)*86400 + COALESCE(NULLIF(split_part(ans, '.', 2), '')::int, 0));
+    EXCEPTION WHEN others THEN
+        IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
+            RAISE EXCEPTION 'non-numeric value for datetime: "%"', ans;
+        ELSE
+            RAISE WARNING 'non-numeric value for datetime: "%"', ans;
+            RETURN '1967-12-31 00:00:00'::timestamp;
+        END IF;
+    END;
+END;
+$$;
 
 -- Change ownership
 -------------------
@@ -114,7 +305,9 @@
 
 	select exodus.assert((exodus.extract_datetime('',1,1,1)               is null), 'exodus.extract_datetime('''',1,1,1) is null');
 	select exodus.assert((exodus.extract_datetime('0',1,1,1)           = '1967-12-31 00:00:00'), 'exodus.extract_datetime(''0'',1,1,1) = ''1967-12-31 00:00:00''');
-	select exodus.assert((exodus.extract_datetime('20000.50000',1,1,1) = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000.50000'',1,1,1) = ''2022-10-03 00:00:00''');
+	select exodus.assert((exodus.extract_datetime('20000.50000',1,1,1) = '2022-10-03 13:53:20'), 'exodus.extract_datetime(''20000.50000'',1,1,1) = ''2022-10-03 13:53:20''');
+	select exodus.assert((exodus.extract_datetime('20000'      ,1,1,1) = '2022-10-03 00:00:00'), 'exodus.extract_datetime(''20000''      ,1,1,1) = ''2022-10-03 00:00:00''');
+	select exodus.assert((exodus.extract_datetime(    '0.50000',1,1,1) = '1967-12-31 13:53:20'), 'exodus.extract_datetime(    ''0.50000'',1,1,1) = ''1967-12-31 13:53:20''');
 
 -- number
 
