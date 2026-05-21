@@ -69,7 +69,9 @@ CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn integer, vn integer
 	IMMUTABLE
 AS $$
 	my ($data, $fn, $vn, $sn) = @_;
-	return '' if !defined $data || $fn < 1;
+	return '' if !defined $data;
+
+	return $data if !defined $fn || $fn < 1;
 
 	# Field level
 	my $pos = 0;
@@ -285,6 +287,9 @@ $$;
 
 	select exodus.assert((exodus.extract_text('aaa',1,1,1) = 'aaa'), 'exodus.extract_text(''aaa'',1,1,1) = ''aaa''');
 	select exodus.assert((exodus.extract_text(E'a1\x1Eb1\x1Db2a\x1Cb2b\x1Ecc',2,2,2) = 'b2b'),'exodus.extract_text(E''a1\x1Eb1\x1Db2a\x1Cb2b\x1Ecc'',2,2,2) = ''b2b''');
+	select exodus.assert((exodus.extract_text('aaa',1,0,0) = 'aaa'), 'exodus.extract_text(''aaa'',1,0,0) = ''aaa''');
+	select exodus.assert((exodus.extract_text('aaa',1,1,0) = 'aaa'), 'exodus.extract_text(''aaa'',1,1,0) = ''aaa''');
+	select exodus.assert((exodus.extract_text('aaa',0,0,0) = 'aaa'), 'exodus.extract_text(''aaa'',0,0,0) = ''aaa''');
 
 -- date
 
