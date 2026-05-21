@@ -64,6 +64,7 @@ add_test(
             sudo -u postgres\
             ${PostgreSQL_PACKAGE_LIBRARY_DIR}/pgxs/src/test/regress/pg_regress\
             --outputdir=/tmp\
+            --load-extension=plperl\
             --load-extension=pgexodus\
             --port $PG_PORT\
         "

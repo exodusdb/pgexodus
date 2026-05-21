@@ -238,8 +238,8 @@ BEGIN
     END IF;
 
     BEGIN
---      RETURN to_timestamp((split_part(ans,'.',1)::int-732)*86400 + split_part(ans,'.',2)::int);
-        RETURN to_timestamp((COALESCE(NULLIF(split_part(ans, '.', 1), '')::int, 0)-732)*86400 + COALESCE(NULLIF(split_part(ans, '.', 2), '')::int, 0));
+--      RETURN to_timestamp((split_part(ans,'.',1)::int-732)*86400 + split_part(ans,'.',2)::int) AT TIME ZONE 'UTC';
+        RETURN to_timestamp((COALESCE(NULLIF(split_part(ans, '.', 1), '')::int, 0)-732)*86400 + COALESCE(NULLIF(split_part(ans, '.', 2), '')::int, 0)) AT TIME ZONE 'UTC';
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for datetime: "%"', ans;
