@@ -47,6 +47,8 @@
 	DROP FUNCTION IF EXISTS exodus.extract_datetime(text, int4, int4, int4);
 	DROP FUNCTION IF EXISTS exodus.extract_number(text, int4, int4, int4);
 	DROP FUNCTION IF EXISTS exodus.count(text, text);
+	DROP FUNCTION IF EXISTS exodus.toBool(numeric);
+	DROP FUNCTION IF EXISTS exodus.toBool(text);
 
 -- Create the functions
 -----------------------
@@ -140,13 +142,16 @@ AS $$
 	}
 	return $count;
 $$;
+
 -- NO STRICT - CAN BE CALLED WITH NULL
 -- RETURNS 0 FOR NULL OR "" INPUT
 -- CAN RETURN 0 FOR NON-NUMERIC
 
 CREATE OR REPLACE FUNCTION exodus.extract_number(data text, fn integer, vn integer, sn integer)
-RETURNS double precision
-LANGUAGE plpgsql IMMUTABLE AS $$
+	RETURNS double precision
+	LANGUAGE plpgsql
+	IMMUTABLE
+AS $$
 DECLARE
     ans text;
 BEGIN
@@ -167,13 +172,17 @@ BEGIN
     END;
 END;
 $$;
+
 -- STRICT - CANNOT BE CALLED WITH NULL
 -- RETURNS NULL FOR "" INPUT
 -- CAN RETURN EPOC START FOR NON-NUMERIC
 
 CREATE OR REPLACE FUNCTION exodus.extract_date(data text, fn integer, vn integer, sn integer)
-RETURNS date
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+	RETURNS date
+	LANGUAGE plpgsql
+	IMMUTABLE
+	STRICT
+	AS $$
 DECLARE
     ans text;
 BEGIN
@@ -195,14 +204,16 @@ BEGIN
 END;
 $$;
 
-
 -- STRICT - CANNOT BE CALLED WITH NULL
 -- RETURNS NULL FOR "" INPUT
 -- CAN RETURN 00:00:00 TIME INTERVAL FOR NON-NUMERIC
 
 CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn integer, vn integer, sn integer)
-RETURNS interval
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+	RETURNS interval
+	LANGUAGE plpgsql
+	IMMUTABLE
+	STRICT
+	AS $$
 DECLARE
     ans text;
 BEGIN
@@ -229,8 +240,11 @@ $$;
 -- CAN RETURN EPOC START TIMESTAMP FOR NON-NUMERIC
 
 CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn integer, vn integer, sn integer)
-RETURNS timestamp without time zone
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+	RETURNS timestamp without time zone
+	LANGUAGE plpgsql
+	IMMUTABLE
+	STRICT
+	AS $$
 DECLARE
     ans text;
 BEGIN
@@ -253,6 +267,54 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION exodus.tobool(innum numeric)
+	RETURNS boolean
+	LANGUAGE plpgsql
+	IMMUTABLE
+	STRICT
+	COST 10
+	AS $$
+BEGIN
+	return $1 != 0;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION exodus.tobool(instring text)
+	RETURNS boolean
+	LANGUAGE plpgsql
+	IMMUTABLE
+	STRICT
+	COST 10
+	AS $$
+DECLARE
+    ch text;
+BEGIN
+    -- Pickos's '', is numeric 0 and false unlike pgsql
+    IF instring = '' THEN RETURN FALSE; END IF;
+    
+    -- Leading non-numeric is true
+    ch := left(instring, 1);
+    IF ch < '0' OR ch > '9' THEN
+        IF ch NOT IN ('-', '.') THEN
+            RETURN TRUE;
+        END IF;
+    END IF;
+    
+    -- Trailing non-numeric is true
+    ch := right(instring, 1);
+    IF ch < '0' OR ch > '9' THEN
+        IF ch <> '.' THEN
+            RETURN TRUE;
+        END IF;
+    END IF;
+    
+    -- Numeric zero is false, anything else is true
+    RETURN instring::numeric <> 0;
+
+EXCEPTION WHEN others THEN RETURN TRUE;  -- if not numeric (and not empty) then true
+END;
+$$;
+
 -- Change ownership
 -------------------
 
@@ -268,6 +330,8 @@ $$;
 	ALTER FUNCTION exodus.extract_datetime(text, integer, integer, integer) OWNER TO exodus;
 	ALTER FUNCTION exodus.extract_number(text, integer, integer, integer)   OWNER TO exodus;
 	ALTER FUNCTION exodus.count(text, text)                                 OWNER TO exodus;
+	ALTER FUNCTION exodus.toBool(numeric)                                   OWNER TO exodus;
+	ALTER FUNCTION exodus.toBool(text)                                      OWNER TO exodus;
 
 -- A function to assist in tests
 --------------------------------
@@ -276,6 +340,13 @@ $$;
 	RETURNS VOID AS $$
 	BEGIN
 		ASSERT result, 'Self test failed. "' || expression || '" should be true.';
+		RAISE INFO 'Test: % ', expression;
+	END;
+	$$ LANGUAGE plpgsql;
+
+	CREATE OR REPLACE FUNCTION exodus.info(expression text)
+	RETURNS VOID AS $$
+	BEGIN
 		RAISE INFO 'Test: % ', expression;
 	END;
 	$$ LANGUAGE plpgsql;
@@ -331,6 +402,47 @@ $$;
 	select exodus.assert((exodus.count('0','a')   = 0), 'exodus.count(''0'',''a'') = 0');
 	select exodus.assert((exodus.count('aaa','a') = 3), 'exodus.count(''aaa'',''a'') = 3');
 	select exodus.assert((exodus.count('aaaa','aa') = 2), 'exodus.count(''aaaa'',''aa'') = 2');
+
+-- toBool numeric
+
+	select exodus.assert((exodus.toBool(0)     = false), 'exodus.toBool(0)   = false');
+	select exodus.assert((exodus.toBool(0.0)   = false), 'exodus.toBool(0.0) = false');
+	select exodus.assert((exodus.toBool(1)     = true),  'exodus.toBool(1)   = true');
+	select exodus.assert((exodus.toBool(1.0)   = true),  'exodus.toBool(1.0) = true');
+-- PickOS small numbers should be false
+--	select exodus.assert((exodus.toBool(0.00001) = false),  'exodus.toBool(0.00001) = false');
+
+-- toBool text
+
+	select exodus.assert((exodus.toBool('')    = false),  'exodus.toBool('''')    = false');
+	select exodus.assert((exodus.toBool('0')   = false),  'exodus.toBool(''0'')   = false');
+	select exodus.assert((exodus.toBool('00')  = false),  'exodus.toBool(''00'')  = false');
+	select exodus.assert((exodus.toBool('.0')  = false),  'exodus.toBool(''.0'')  = false');
+	select exodus.assert((exodus.toBool('0.')  = false),  'exodus.toBool(''0.'')  = false');
+	select exodus.assert((exodus.toBool('0.0') = false),  'exodus.toBool(''0.0'') = false');
+	select exodus.assert((exodus.toBool('-0')  = false),  'exodus.toBool(''-0'')  = false');
+
+	select exodus.assert((exodus.toBool(' ')   = true),  'exodus.toBool('' '')    = true');
+	select exodus.assert((exodus.toBool('.')   = true),  'exodus.toBool(''.'')    = true');
+	select exodus.assert((exodus.toBool('-')   = true),  'exodus.toBool(''-'')    = true');
+	select exodus.assert((exodus.toBool('1')   = true),  'exodus.toBool(''01'')   = true');
+	select exodus.assert((exodus.toBool('11')  = true),  'exodus.toBool(''11'')   = true');
+	select exodus.assert((exodus.toBool('.1')  = true),  'exodus.toBool(''.1'')   = true');
+	select exodus.assert((exodus.toBool('1.')  = true),  'exodus.toBool(''1.'')   = true');
+	select exodus.assert((exodus.toBool('1.1') = true),  'exodus.toBool(''1.1'')  = true');
+	select exodus.assert((exodus.toBool('-1')  = true),  'exodus.toBool(''-1'') = true');
+
+	select exodus.assert((exodus.toBool('a')   = true),  'exodus.toBool(''a'')    = true');
+	select exodus.assert((exodus.toBool('Z')   = true),  'exodus.toBool(''Z'')    = true');
+
+	select exodus.assert((exodus.toBool(' 0')   = true),  'exodus.toBool('' 0'')    = true');
+	select exodus.assert((exodus.toBool('0 ')   = true),  'exodus.toBool(''0 '')    = true');
+	select exodus.assert((exodus.toBool(E'\t0') = true),  'exodus.toBool(''\t0'') = true');
+	select exodus.assert((exodus.toBool(E'0\t') = true),  'exodus.toBool(''0\t'')  = true');
+	select exodus.assert((exodus.toBool(E'\n0') = true),  'exodus.toBool(''\n0'') = true');
+	select exodus.assert((exodus.toBool(E'0\n') = true),  'exodus.toBool(''0\n'')  = true');
+	select exodus.assert((exodus.toBool(E'\r0') = true),  'exodus.toBool(''\r0'') = true');
+	select exodus.assert((exodus.toBool(E'0\r') = true),  'exodus.toBool(''0\r'')  = true');
 
 -- bad dates, times and numbers
 
