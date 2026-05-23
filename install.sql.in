@@ -197,8 +197,9 @@ BEGIN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for date: "%"', ans;
         ELSE
-            RAISE WARNING 'non-numeric value for date: "%"', ans;
-            RETURN '1967-12-31'::date;
+--            RAISE WARNING 'non-numeric value for date: "%"', ans;
+--            RETURN '1967-12-31'::date;
+			RETURN NULL;
         END IF;
     END;
 END;
