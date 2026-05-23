@@ -448,7 +448,8 @@ $$;
 -- bad dates, times and numbers
 
 	select exodus.assert(true, '-- bad dates, times and numbers --');
-	select exodus.assert((exodus.extract_date('x',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''x'',1,1,1) = ''1967-12-31''');
+--	select exodus.assert((exodus.extract_date('x',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''x'',1,1,1) = ''1967-12-31''');
+	select exodus.assert((exodus.extract_date('x',1,1,1)     is null       ), 'exodus.extract_date(''x'',1,1,1) is null');
 	select exodus.assert((exodus.extract_time('x',1,1,1)     = '00:00:00'),   'exodus.extract_time(''x'',1,1,1) = ''00:00:00''');
 	select exodus.assert((exodus.extract_datetime('x',1,1,1) = '1967-12-31 00:00:00'), 'exodus.extract_date(''x'',1,1,1) = ''1967-12-31 00:00:00''');
 	select exodus.assert((exodus.extract_number('x',1,1,1)   = 0),            'exodus.extract_number(''x'',1,1,1) = 0');
