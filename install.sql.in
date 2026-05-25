@@ -456,7 +456,7 @@ $$;
 
 -- TODO Leading spaces are tolerated but should not be
 
-	select exodus.assert(true, '-- TODO non-numeric dates, times and numbers should raise a non-numeric error --');
+	select exodus.assert(true, '-- TODO non-numeric dates, times and numbers should raise a non-numeric err --');
 	--select exodus.assert((exodus.extract_date(' 1',1,1,1)   = '1967-12-31'), 'exodus.extract_date('' 1'',1,1,1) = ''1967-12-31''');
 	--select exodus.assert((exodus.extract_time(' 1',1,1,1)   = '00:00:00'),   'exodus.extract_time('' 1'',1,1,1) = ''00:00:00''');
 	--select exodus.assert((exodus.extract_datetime(' 1',1,1,1) = '1967-12-31 00:00:00'), 'exodus.extract_date('' 1'',1,1,1) = ''1967-12-31 00:00:00''');
