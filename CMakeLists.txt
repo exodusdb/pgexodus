@@ -36,7 +36,7 @@ cmake_minimum_required(VERSION 3.15)
 # /usr/share/postgresql/18/extension/pgexodus--1.0.sql
 
 	configure_file(
-		install.sql.in ${EXTENSION_NAME}--${EXTENSION_VERSION}.sql @ONLY
+		pgexodus.sql ${EXTENSION_NAME}--${EXTENSION_VERSION}.sql @ONLY
 	)
 
 # Install the extension control file and sql script

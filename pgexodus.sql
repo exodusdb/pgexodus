@@ -1,3 +1,10 @@
+DO $$
+BEGIN
+   RAISE INFO '
+Creating extension pgexodus using /usr/share/postgresql/NN/extension/pgexodus--1.0.sql origin exodus/pgexodus/pgexodus.sql
+─────────────────────────────────────────────────────────────────────────────────';
+END
+$$;
 -- =================================
 -- Create the @EXTENSION_NAME@ @EXTENSION_VERSION@ functions
 -- =================================
@@ -38,7 +45,7 @@
 
 	ALTER SCHEMA exodus OWNER TO exodus;
 
--- Drop any existing functions
+-- Drop any existing functions - why?
 ------------------------------
 
 	DROP FUNCTION IF EXISTS exodus.extract_text(text, int4, int4, int4);
@@ -50,8 +57,8 @@
 	DROP FUNCTION IF EXISTS exodus.toBool(numeric);
 	DROP FUNCTION IF EXISTS exodus.toBool(text);
 
--- Create the functions
------------------------
+-- Create the C functions - obsolete
+------------------------------------
 
 --	CREATE OR REPLACE FUNCTION exodus.extract_text(data text, fn int4, vn int4, sn int4)     RETURNS text      AS '@EXTENSION_NAME@', 'exodus_extract_text'     LANGUAGE C IMMUTABLE;
 --	-- returns zero for zero length strings or NULLS
@@ -62,6 +69,11 @@
 --	CREATE OR REPLACE FUNCTION exodus.extract_time(data text, fn int4, vn int4, sn int4)     RETURNS interval  AS '@EXTENSION_NAME@', 'exodus_extract_time'     LANGUAGE C IMMUTABLE STRICT;
 --	CREATE OR REPLACE FUNCTION exodus.extract_datetime(data text, fn int4, vn int4, sn int4) RETURNS timestamp AS '@EXTENSION_NAME@', 'exodus_extract_datetime' LANGUAGE C IMMUTABLE STRICT;
 
+-- Create the functions
+-----------------------
+
+-- extract_text
+-- ------------
 -- NO STRICT - CAN BE CALLED WITH NULL
 -- RETURNS "" FOR NULL INPUT
 
@@ -108,6 +120,9 @@ AS $$
 	$end = index($val, "\x1C", 0);
 	return ($end == -1) ? $val : substr($val, 0, $end);
 $$;
+
+-- count
+-- ------------
 -- NOT STRICT - CAN BE CALLED WITH NULLS - RETURNS 0
 -- NEVER RETURNS NULL
 -- plperl FOR PERFORMANCE
@@ -143,6 +158,8 @@ AS $$
 	return $count;
 $$;
 
+-- extract_number
+-- --------------
 -- NO STRICT - CAN BE CALLED WITH NULL
 -- RETURNS 0 FOR NULL OR "" INPUT
 -- CAN RETURN 0 FOR NON-NUMERIC
@@ -173,6 +190,8 @@ BEGIN
 END;
 $$;
 
+-- extract_date
+-- ------------
 -- STRICT - CANNOT BE CALLED WITH NULL
 -- RETURNS NULL FOR "" INPUT
 -- CAN RETURN EPOC START FOR NON-NUMERIC
@@ -205,6 +224,8 @@ BEGIN
 END;
 $$;
 
+-- extract_time
+-- ------------
 -- STRICT - CANNOT BE CALLED WITH NULL
 -- RETURNS NULL FOR "" INPUT
 -- CAN RETURN 00:00:00 TIME INTERVAL FOR NON-NUMERIC
@@ -236,6 +257,8 @@ BEGIN
 END;
 $$;
 
+-- extract_datetime
+-- ----------------
 -- STRICT - CANNOT BE CALLED WITH NULL
 -- RETURNS NULL FOR "" INPUT
 -- CAN RETURN EPOC START TIMESTAMP FOR NON-NUMERIC
@@ -268,6 +291,11 @@ BEGIN
 END;
 $$;
 
+-- toBool from numeric
+-- -------------------
+-- STRICT - CANNOT BE CALLED WITH NULL
+-- ALWAYS RETURN TRUE OR FALSE
+
 CREATE OR REPLACE FUNCTION exodus.tobool(innum numeric)
 	RETURNS boolean
 	LANGUAGE plpgsql
@@ -279,6 +307,11 @@ BEGIN
 	return $1 != 0;
 END;
 $$;
+
+-- toBool from text
+-- -------------------
+-- STRICT - CANNOT BE CALLED WITH NULL
+-- ALWAYS RETURN TRUE OR FALSE
 
 CREATE OR REPLACE FUNCTION exodus.tobool(instring text)
 	RETURNS boolean
@@ -325,6 +358,8 @@ $$;
 	-- GRANT EXECUTE ON FUNCTION exodus.extract_datetime(text, integer, integer, integer) TO PUBLIC;
 	-- GRANT EXECUTE ON FUNCTION exodus.extract_number(text, integer, integer, integer)   TO PUBLIC;
 	-- GRANT EXECUTE ON FUNCTION exodus.count(text, text)                                 TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.toBool(numeric)                                   TO PUBLIC;
+	-- GRANT EXECUTE ON FUNCTION exodus.toBool(text)                                      TO PUBLIC;
 	ALTER FUNCTION exodus.extract_text(text, integer, integer, integer)     OWNER TO exodus;
 	ALTER FUNCTION exodus.extract_date(text, integer, integer, integer)     OWNER TO exodus;
 	ALTER FUNCTION exodus.extract_time(text, integer, integer, integer)     OWNER TO exodus;
@@ -466,3 +501,10 @@ $$;
 -----------
 
 	DROP FUNCTION exodus.assert(result bool, expression text);
+DO $$
+BEGIN
+   RAISE INFO '
+Created postgresql extension pgexodus
+─────────────────────────────────────';
+END
+$$;
