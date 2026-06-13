@@ -57,17 +57,50 @@ cmake_minimum_required(VERSION 3.15)
 add_test(
     NAME pgexodus_test
     COMMAND
-        bash -c "\
-            PG_PORT=`grep '^\\s*port\\s*=\\s*\\([0-9]\\)*' /etc/postgresql/${PG_VER}/main/postgresql.conf|grep [0-9]* -o`;\
-            ! sudo -u postgres psql --port $PG_PORT postgres -c 'select version()' ||\
-            sudo -u postgres psql --port $PG_PORT postgres -c \"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'xo_regression' AND pid <> pg_backend_pid();\" &&\
-            sudo -u postgres\
-            ${PostgreSQL_PACKAGE_LIBRARY_DIR}/pgxs/src/test/regress/pg_regress\
-            --outputdir=/tmp\
-            --load-extension=plperl\
-            --load-extension=pgexodus\
-            --port $PG_PORT\
-            --dbname=xo_regression\
+        bash -c "
+            set -euxo pipefail
+
+            : 'Extract PostgreSQL port'
+            PG_PORT=\$(grep '^\\s*port\\s*=\\s*[0-9]' /etc/postgresql/\${PG_VER}/main/postgresql.conf | grep -o '[0-9]\\+')
+
+            : 'Cleanup function'
+            cleanup() {
+                : '=== Cleaning up xo_regression database ==='
+                sudo -u postgres psql --port \"\$PG_PORT\" postgres -c '
+                    -- Terminate existing connections
+                    SELECT pg_terminate_backend(pid)
+                    FROM pg_stat_activity
+                    WHERE datname = '\''xo_regression'\''
+                      AND pid <> pg_backend_pid();
+                ' 2>/dev/null || true
+
+                sudo -u postgres psql --port \"\$PG_PORT\" postgres -c '
+                    DROP DATABASE IF EXISTS xo_regression;
+                ' 2>/dev/null || true
+
+                : '=== Cleanup completed ==='
+                sleep 1
+            }
+
+            : 'Always clean before starting'
+            cleanup
+
+            : 'Ensure cleanup also runs on exit (success or failure)'
+            trap cleanup EXIT
+
+            : '=== Starting pg_regress test ==='
+
+            : 'Run the regression test'
+            sudo -u postgres \
+                ${PostgreSQL_PACKAGE_LIBRARY_DIR}/pgxs/src/test/regress/pg_regress \
+                --outputdir=/tmp \
+                --load-extension=plperl \
+                --load-extension=pgexodus \
+                --port \"\$PG_PORT\" \
+                --dbname=xo_regression \
+                \"\$@\"
+
+            : '=== Test completed successfully ==='
         "
 )
 # Exit
