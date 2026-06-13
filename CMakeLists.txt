@@ -60,13 +60,14 @@ add_test(
         bash -c "\
             PG_PORT=`grep '^\\s*port\\s*=\\s*\\([0-9]\\)*' /etc/postgresql/${PG_VER}/main/postgresql.conf|grep [0-9]* -o`;\
             ! sudo -u postgres psql --port $PG_PORT postgres -c 'select version()' ||\
-            sudo -u postgres psql --port $PG_PORT postgres -c \"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'regression' AND pid <> pg_backend_pid();\" &&\
+            sudo -u postgres psql --port $PG_PORT postgres -c \"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'xo_regression' AND pid <> pg_backend_pid();\" &&\
             sudo -u postgres\
             ${PostgreSQL_PACKAGE_LIBRARY_DIR}/pgxs/src/test/regress/pg_regress\
             --outputdir=/tmp\
             --load-extension=plperl\
             --load-extension=pgexodus\
             --port $PG_PORT\
+            --dbname=xo_regression\
         "
 )
 # Exit
