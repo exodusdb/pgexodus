@@ -60,6 +60,9 @@ add_test(
         bash -c "
             set -euxo pipefail
 
+            : 'Extract PostgreSQL version'
+			PG_VER=$(psql -V | grep -Po '[0-9]+' | head -1)
+
             : 'Extract PostgreSQL port'
             PG_PORT=\$(grep '^\\s*port\\s*=\\s*[0-9]' /etc/postgresql/\${PG_VER}/main/postgresql.conf | grep -o '[0-9]\\+')
 
