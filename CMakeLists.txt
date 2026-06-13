@@ -82,7 +82,7 @@ add_test(
                 ' 2>/dev/null || true
 
                 : '=== Cleanup completed ==='
-                sleep 1
+                #sleep 1
             }
 
             : 'Always clean before starting'
