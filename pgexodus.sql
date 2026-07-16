@@ -211,7 +211,7 @@ BEGIN
     END IF;
 
     BEGIN
-        RETURN '1967-12-31'::date + ans::int;
+        RETURN '1967-12-31'::date + trunc(ans::float8)::int;
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for date: "%"', ans;
@@ -245,7 +245,7 @@ BEGIN
     END IF;
 
     BEGIN
-        RETURN make_interval(secs => ans::int);
+        RETURN make_interval(secs => trunc(ans::float8)::int);
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for time: "%"', ans;
@@ -279,7 +279,7 @@ BEGIN
 
     BEGIN
 --      RETURN to_timestamp((split_part(ans,'.',1)::int-732)*86400 + split_part(ans,'.',2)::int) AT TIME ZONE 'UTC';
-        RETURN to_timestamp((COALESCE(NULLIF(split_part(ans, '.', 1), '')::int, 0)-732)*86400 + COALESCE(NULLIF(split_part(ans, '.', 2), '')::int, 0)) AT TIME ZONE 'UTC';
+        RETURN to_timestamp((trunc(COALESCE(NULLIF(split_part(ans, '.', 1), '')::float8, 0))::int-732)*86400 + trunc(COALESCE(NULLIF(split_part(ans, '.', 2), '')::float8, 0))::int) AT TIME ZONE 'UTC';
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for datetime: "%"', ans;
@@ -403,6 +403,7 @@ $$;
 	select exodus.assert((exodus.extract_date('',1,1,1)         is null),     'exodus.extract_date('''',1,1,1) is null');
 	select exodus.assert((exodus.extract_date('0',1,1,1)     = '1967-12-31'), 'exodus.extract_date(''0'',1,1,1) = ''1967-12-31''');
 	select exodus.assert((exodus.extract_date('20000',1,1,1) = '2022-10-03'), 'exodus.extract_date(''20000'',1,1,1) = ''2022-10-03''');
+	select exodus.assert((exodus.extract_date('20000.9',1,1,1) = '2022-10-03'), 'exodus.extract_date(''20000.9'',1,1,1) = ''2022-10-03''');
 
 -- time
 
@@ -412,6 +413,7 @@ $$;
 	select exodus.assert((exodus.extract_time('86399',1,1,1)  = '23:59:59'), 'exodus.extract_time(''86399'',1,1,1) = ''23:59:59''');
 	select exodus.assert((exodus.extract_time('86400',1,1,1)  = '24:00:00'), 'exodus.extract_time(''86400'',1,1,1) = ''24:00"00''');
 	select exodus.assert((exodus.extract_time('100000',1,1,1) = '27:46:40'), 'exodus.extract_time(''100000'',1,1,1) = ''27:46:40''');
+	select exodus.assert((exodus.extract_time('3600.5',1,1,1) = '01:00:00'), 'exodus.extract_time(''3600.5'',1,1,1) = ''01:00:00''');
 
 -- datetime
 
