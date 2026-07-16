@@ -245,7 +245,7 @@ BEGIN
     END IF;
 
     BEGIN
-        RETURN make_interval(secs => trunc(ans::float8)::int);
+        RETURN make_interval(secs => ans::float8);
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for time: "%"', ans;
@@ -412,7 +412,7 @@ $$;
 	select exodus.assert((exodus.extract_time('86399',1,1,1)  = '23:59:59'), 'exodus.extract_time(''86399'',1,1,1) = ''23:59:59''');
 	select exodus.assert((exodus.extract_time('86400',1,1,1)  = '24:00:00'), 'exodus.extract_time(''86400'',1,1,1) = ''24:00"00''');
 	select exodus.assert((exodus.extract_time('100000',1,1,1) = '27:46:40'), 'exodus.extract_time(''100000'',1,1,1) = ''27:46:40''');
-	select exodus.assert((exodus.extract_time('3600.5',1,1,1) = '01:00:00'), 'exodus.extract_time(''3600.5'',1,1,1) = ''01:00:00''');
+	select exodus.assert((exodus.extract_time('3600.5',1,1,1) = '01:00:00.5'), 'exodus.extract_time(''3600.5'',1,1,1) = ''01:00:00.5''');
 
 -- datetime
 
