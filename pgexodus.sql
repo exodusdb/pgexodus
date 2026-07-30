@@ -278,7 +278,13 @@ BEGIN
     END IF;
 
     BEGIN
-        RETURN to_timestamp((split_part(ans, '.', 1)::int - 732) * 86400 + split_part(ans, '.', 2)::int) AT TIME ZONE 'UTC';
+        -- Pick datetime is "days[.seconds]". No decimal → seconds = 0.
+        -- split_part(ans,'.',2) is '' for pure dates; ''::int throws and used
+        -- to fall into the non-numeric handler (wrong epoch for e.g. '20000').
+        RETURN to_timestamp(
+            (trunc(COALESCE(NULLIF(split_part(ans, '.', 1), '')::float8, 0))::int - 732) * 86400
+            + trunc(COALESCE(NULLIF(split_part(ans, '.', 2), '')::float8, 0))::int
+        ) AT TIME ZONE 'UTC';
     EXCEPTION WHEN others THEN
         IF current_setting('exodus.allow_non_numeric', true) = 'false' THEN
             RAISE EXCEPTION 'non-numeric value for datetime: "%"', ans;
